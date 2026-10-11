@@ -12,7 +12,7 @@ pub struct Render {
 
 impl Render {
     /// Construct a new `Render` with a position context and a `String`.
-    fn new(value: String, context: RenderContext) -> Self {
+    pub fn new(value: String, context: RenderContext) -> Self {
         let mut lines = Vec::new();
         let mut width = 0;
 
@@ -61,6 +61,12 @@ pub struct RenderContext {
     /// The x coordinate of where a widget will be drawn.
     pub x: u32,
 
+    /// The y coordinate of where a widget will be drawn.
+    pub y: u32,
+
     /// The width of the terminal an application is running in.
     pub terminal_width: u32,
+
+    /// The maximum width this widget is allowed to have.
+    pub max_width: u32,
 }

@@ -4,6 +4,7 @@
 mod compositor;
 
 use compositor::CompositorType;
+use crate::render::*;
 
 use std::fmt;
 
@@ -25,4 +26,14 @@ where T: fmt::Debug
 impl<T> Widget<T>
 where T: fmt::Debug
 {
+    /// Render the widget into a `Render` object.
+    pub fn render(&self, context: RenderContext) -> Render {
+        match self {
+            Self::Label(text) => Render::new(text.clone(), context),
+            Self::Button(text, _) => Render::new(text.clone(), context),
+            Self::Compositor { children, compositor_type } => {
+                compositor_type.render(children.clone(), context)
+            }
+        }
+    }
 }
