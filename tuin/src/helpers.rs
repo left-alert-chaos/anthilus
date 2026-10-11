@@ -13,3 +13,16 @@ macro_rules! col {
         }
     };
 }
+
+#[macro_export]
+macro_rules! row {
+    ( $( $x:expr ),* ) => {
+        {
+            let mut compositor = tuin::Widget::new_compositor(tuin::CompositorType::Row);
+            $(
+                compositor.add_child($x);
+            )*
+            compositor
+        }
+    }
+}
