@@ -71,6 +71,7 @@ impl CompositorType
 impl<T> Widget<T>
 where T: Clone + fmt::Debug
 {
+    /// Add a child widget to this one, panicking if self isn't a compositor.
     pub fn add_child(&mut self, child: Self) {
         let Self::Compositor { children, compositor_type } = self else {
             panic!("Widget<T>::add_child(): Non-compositing widgets can't have children.");

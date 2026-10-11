@@ -3,7 +3,7 @@
 
 mod compositor;
 
-use compositor::CompositorType;
+pub use compositor::CompositorType;
 use crate::render::*;
 
 use std::fmt;
@@ -26,7 +26,12 @@ where T: Clone + fmt::Debug
 impl<T> Widget<T>
 where T: Clone + fmt::Debug
 {
-    /// Render the widget into a `Render` object.
+    /// Create a new compositor with the given layout type
+    pub fn new_compositor(compositor_type: CompositorType) -> Self {
+        Self::Compositor { children: Vec::new(), compositor_type }
+    }
+
+    /// Render the widget into a `Render` object
     pub fn render(&self, context: RenderContext) -> Render {
         match self {
             Self::Label(text) => Render::new(text.clone(), context),
