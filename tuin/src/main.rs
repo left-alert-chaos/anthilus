@@ -6,12 +6,7 @@ fn main() {
         Widget::Label(String::from("hello")),
         Widget::Label(String::from("Line 2"))
     ];
-    let context = RenderContext {
-        x: 1,
-        y: 1,
-        max_width: 100,
-        terminal_width: 100,
-    };
+    let context = Default::default();
     let rendered: String = column.render(context).into();
     println!("{rendered}");
 }

@@ -76,3 +76,16 @@ pub struct RenderContext {
     /// The maximum width this widget is allowed to have.
     pub max_width: u32,
 }
+
+impl Default for RenderContext {
+    fn default() -> Self {
+        let width = unsafe { crate::size::terminal_width() } as u32;
+        println!("Terminal width is {width}");
+        Self {
+            x: 1,
+            y: 1,
+            terminal_width: width,
+            max_width: width,
+        }
+    }
+}
