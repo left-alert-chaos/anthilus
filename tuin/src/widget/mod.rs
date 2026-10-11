@@ -13,7 +13,7 @@ use std::fmt;
 /// T is a Message that some widgets emit when interacted with.
 #[derive(Eq, PartialEq, Clone)]
 pub enum Widget<T>
-where T: fmt::Debug
+where T: Clone + fmt::Debug
 {
     Label(String),
     Compositor {
@@ -24,7 +24,7 @@ where T: fmt::Debug
 }
 
 impl<T> Widget<T>
-where T: fmt::Debug
+where T: Clone + fmt::Debug
 {
     /// Render the widget into a `Render` object.
     pub fn render(&self, context: RenderContext) -> Render {
@@ -32,7 +32,7 @@ where T: fmt::Debug
             Self::Label(text) => Render::new(text.clone(), context),
             Self::Button(text, _) => Render::new(text.clone(), context),
             Self::Compositor { children, compositor_type } => {
-                compositor_type.render(children.clone(), context)
+                compositor_type.render(children, context)
             }
         }
     }
