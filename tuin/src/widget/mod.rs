@@ -1,6 +1,10 @@
 //! # widget
 //! This is logic for all widgets.
 
+mod compositor;
+
+use compositor::CompositorType;
+
 use std::fmt;
 
 /// # Widget<T>
@@ -15,13 +19,10 @@ where T: fmt::Debug
         children: Vec<Self>,
         compositor_type: CompositorType,
     },
-    Button(T),
+    Button(String, T),
 }
 
-/// # CompositorType
-/// This enum differentiates between a vertical or horizontal compositor.
-#[derive(Eq, PartialEq, Clone)]
-pub enum CompositorType {
-    Row,
-    Column,
+impl<T> Widget<T>
+where T: fmt::Debug
+{
 }
