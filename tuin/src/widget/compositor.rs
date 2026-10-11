@@ -32,8 +32,8 @@ impl CompositorType
     where T: Clone + fmt::Debug
     {
         let mut buffer = String::new();
-        let mut x;
-        let y = context.y;
+        //let mut x;
+        //let y = context.y;
         
         // Fix max width
         let number_of_children = children.len() as u32;
@@ -46,8 +46,8 @@ impl CompositorType
 
             buffer.push_str(<Render as Into<String>>::into(render).as_str());
             
-            x = context.x;
-            buffer.push_str(format!("\x1b[{y};{x}H").as_str());
+            //x = context.x;
+            //buffer.push_str(format!("\x1b[{y};{x}H").as_str());
             buffer.push(' ');
         }
 

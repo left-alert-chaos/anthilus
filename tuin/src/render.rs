@@ -17,10 +17,20 @@ impl Render {
         let mut width = 0;
 
         for line in value.split('\n') {
-            lines.push(line.to_string());
+            let mut line = line.trim().to_string();
+
+            if line.starts_with("\x1b") {
+                while !line.starts_with('H') {
+                    line.remove(0);
+                }
+                line.remove(0);
+            }
+
             if line.len() > width {
                 width = line.len();
             }
+
+            lines.push(line);
         }
 
         Self {
@@ -80,7 +90,6 @@ pub struct RenderContext {
 impl Default for RenderContext {
     fn default() -> Self {
         let width = unsafe { crate::size::terminal_width() } as u32;
-        println!("Terminal width is {width}");
         Self {
             x: 1,
             y: 1,
