@@ -33,7 +33,7 @@ impl CompositorType
     {
         let mut buffer = String::new();
         let mut x;
-        let mut y;
+        let y = context.y;
 
         for child in children {
             let render = child.render(context);
@@ -42,8 +42,7 @@ impl CompositorType
             buffer.push_str(<Render as Into<String>>::into(render).as_str());
             
             x = context.x;
-            y = context.y;
-            buffer.push_str(format!("\x1b[{x};{y}H").as_str());
+            buffer.push_str(format!("\x1b[{y};{x}H").as_str());
         }
 
         buffer
@@ -51,12 +50,10 @@ impl CompositorType
 
     /// Handle rendering of a column's children. Returns a `String`, which will be converted to a
     /// `Render` later.
-    pub fn render_column<T>(self, children: &Vec<Widget<T>>, context: RenderContext) -> String
+    pub fn render_column<T>(self, children: &Vec<Widget<T>>, mut context: RenderContext) -> String
     where T: Clone + fmt::Debug
     {
         let mut buffer = String::new();
-        let mut x;
-        let mut y;
 
         for child in children {
             let render = child.render(context);
@@ -64,9 +61,7 @@ impl CompositorType
 
             buffer.push_str(<Render as Into<String>>::into(render).as_str());
 
-            x = context.x;
-            y = context.y;
-            buffer.push_str(format!("\x1b[{x};{y}H").as_str());
+            buffer.push('\n');
         }
 
         buffer.pop();

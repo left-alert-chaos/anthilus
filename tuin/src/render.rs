@@ -3,7 +3,7 @@
 
 /// # Render
 /// A rendered widget, split into lines.
-#[derive(PartialEq, Eq, Clone)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Render {
     lines: Vec<String>,
     width: u32,
@@ -46,11 +46,14 @@ impl From<Render> for String {
     fn from(value: Render) -> Self {
         let mut buffer = String::new();
         let x = value.context.x;
+        let mut y = value.context.y;
 
         for line in value.lines {
             // jump to the correct x coordinate
-            buffer.push_str(format!("\x1b[;{x}H").as_str());
+            buffer.push_str(format!("\x1b[{y};{x}H").as_str());
             buffer.push_str(line.as_str());
+
+            y += 1;
         }
 
         buffer
@@ -59,7 +62,7 @@ impl From<Render> for String {
 
 /// # RenderContext
 /// Holds size and location information that a `Render` uses to draw into a `String`.
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub struct RenderContext {
     /// The x coordinate of where a widget will be drawn.
     pub x: u32,
