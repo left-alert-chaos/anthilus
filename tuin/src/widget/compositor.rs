@@ -34,6 +34,11 @@ impl CompositorType
         let mut buffer = String::new();
         let mut x;
         let y = context.y;
+        
+        // Fix max width
+        let number_of_children = children.len() as u32;
+        context.max_width -= number_of_children - 1; // padding
+        context.max_width /= number_of_children;
 
         for child in children {
             let render = child.render(context);
@@ -43,7 +48,10 @@ impl CompositorType
             
             x = context.x;
             buffer.push_str(format!("\x1b[{y};{x}H").as_str());
+            buffer.push(' ');
         }
+
+        buffer.pop();
 
         buffer
     }
