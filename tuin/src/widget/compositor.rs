@@ -43,7 +43,7 @@ impl CompositorType
             
             x = context.x;
             y = context.y;
-            print!("\x1b[{x};{y}H");
+            buffer.push_str(format!("\x1b[{x};{y}H").as_str());
         }
 
         buffer
@@ -55,11 +55,18 @@ impl CompositorType
     where T: Clone + fmt::Debug
     {
         let mut buffer = String::new();
+        let mut x;
+        let mut y;
 
         for child in children {
             let render = child.render(context);
+            context.y += render.height();
+
             buffer.push_str(<Render as Into<String>>::into(render).as_str());
-            buffer.push('\n');
+
+            x = context.x;
+            y = context.y;
+            buffer.push_str(format!("\x1b[{x};{y}H").as_str());
         }
 
         buffer.pop();

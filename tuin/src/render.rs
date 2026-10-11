@@ -29,12 +29,15 @@ impl Render {
             context
         }
     }
-}
 
-impl Render {
     /// Get the width of a `Render`.
     pub fn width(&self) -> u32 {
         self.width
+    }
+
+    /// Get the height of a `Render`.
+    pub fn height(&self) -> u32 {
+        self.lines.len() as u32
     }
 }
 
