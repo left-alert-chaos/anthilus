@@ -4,7 +4,7 @@
 mod compositor;
 
 pub use compositor::CompositorType;
-use crate::render::*;
+use crate::*;
 
 use std::fmt;
 
@@ -24,7 +24,7 @@ where T: Clone + fmt::Debug
 }
 
 impl<T> Widget<T>
-where T: Clone + fmt::Debug
+where T: Event
 {
     /// Create a new compositor with the given layout type
     pub fn new_compositor(compositor_type: CompositorType) -> Self {

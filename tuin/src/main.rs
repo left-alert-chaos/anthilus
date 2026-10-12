@@ -18,8 +18,10 @@ fn main() {
     // rendering
     let context = Default::default();
     let rendered: String = column.render(context).into();
-    println!("{rendered}\n\n");
+    println!("{rendered}");
 }
 
 #[derive(Clone, Debug)]
 enum Message {}
+
+impl Event for Message {}
