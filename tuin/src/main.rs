@@ -1,13 +1,16 @@
 use tuin::*;
 
+use std::time::Duration;
+
 fn main() {
     let mut state = MyApp::new();
-    state.event_loop(None);
+    state.event_loop(Some(info_callback));
 }
 
 #[derive(Clone, Debug)]
 enum Message {
     Input(Input),
+    Tick,
 }
 
 impl Event for Message {}
@@ -25,8 +28,11 @@ struct MyApp {
 
 impl State<Message> for MyApp {
     fn update(&mut self, event: Message) {
-        let Message::Input(input) = event;
-        self.letters.push(input.into());
+        if let Message::Input(input) = event {
+            self.letters.push(input.into());
+        } else {
+            self.seconds += 1;
+        }
     }
 
     fn build(&self) -> Option<Widget<Message>> {
@@ -43,5 +49,14 @@ impl MyApp {
             letters: String::new(),
             seconds: 0,
         }
+    }
+}
+
+fn info_callback(info: &mut RuntimeInfo) -> Option<Message> {
+    if info.elapsed() >= Duration::new(1, 0) {
+        info.reset_clock();
+        Some(Message::Tick)
+    } else {
+        None
     }
 }

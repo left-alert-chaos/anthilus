@@ -3,7 +3,7 @@
 
 use crate::*;
 
-use std::io::{self, Write};
+use std::{io::{self, Write}, time::{Instant, Duration}};
 
 /// # State
 /// All behavior needed to store an app's persistent state.
@@ -24,9 +24,12 @@ where T: Event
 
     /// Repeatedly run the event loop until `build()` returns `None`.
     /// The callback is called every loop iteration and if it returns `Some`, that message is passed
-    /// to `update()`.
-    fn event_loop(&mut self, callback: Option<fn() -> Option<T>>) {
+    /// to `update()`. This can be used to run logic roughly every few seconds, but the callback is
+    /// only run once a key has been pressed.
+    fn event_loop(&mut self, callback: Option<fn(&mut RuntimeInfo) -> Option<T>>) {
         raw_mode();
+
+        let mut info = RuntimeInfo::new();
 
         loop {
             // clear the screen
@@ -41,7 +44,7 @@ where T: Event
             print!("{rendered}");
             let _ = io::stdout().flush();
 
-            if let Some(function) = &callback && let Some(message) = function() {
+            if let Some(function) = &callback && let Some(message) = function(&mut info) {
                 self.update(message);
             }
 
@@ -52,8 +55,43 @@ where T: Event
 
             let event = T::from(input);
             self.update(event);
+
+            info.frame += 1;
         }
 
         exit_raw_mode();
+    }
+}
+
+/// # RuntimeInfo
+/// All the information you could possibly need about the runtime. Built-in clock function, as well
+/// as general statistics.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RuntimeInfo {
+    last_instant: Instant,
+    frame: u64,
+}
+
+impl RuntimeInfo {
+    fn new() -> Self {
+        Self {
+            last_instant: Instant::now(),
+            frame: 0,
+        }
+    }
+
+    /// Get the elapsed time sinse the clock was reset
+    pub fn elapsed(&self) -> Duration {
+        self.last_instant.elapsed()
+    }
+
+    /// Reset the clock
+    pub fn reset_clock(&mut self) {
+        self.last_instant = Instant::now();
+    }
+
+    /// Get the numbered frame we're currently on. The first frame is 0.
+    pub fn frame(&self) -> u64 {
+        self.frame
     }
 }
