@@ -13,10 +13,7 @@ pub enum CompositorType {
 
 impl CompositorType {
     /// Handle rendering of a compositor's children
-    pub fn render<T>(self, children: &Vec<Widget<T>>, context: RenderContext) -> Render
-    where
-        T: Event,
-    {
+    pub fn render(self, children: &Vec<Widget>, context: RenderContext) -> Render {
         let text = match self {
             Self::Row => self.render_row(children, context),
             Self::Column => self.render_column(children, context),
@@ -26,13 +23,8 @@ impl CompositorType {
 
     /// Handle rendering of a row's children. Returns a `String`, which will be converted to a
     /// `Render` later.
-    pub fn render_row<T>(self, children: &Vec<Widget<T>>, mut context: RenderContext) -> String
-    where
-        T: Event,
-    {
+    pub fn render_row(self, children: &Vec<Widget>, mut context: RenderContext) -> String {
         let mut buffer = String::new();
-        //let mut x;
-        //let y = context.y;
 
         // Fix max width
         let number_of_children = children.len() as u32;
@@ -57,10 +49,7 @@ impl CompositorType {
 
     /// Handle rendering of a column's children. Returns a `String`, which will be converted to a
     /// `Render` later.
-    pub fn render_column<T>(self, children: &Vec<Widget<T>>, mut context: RenderContext) -> String
-    where
-        T: Event,
-    {
+    pub fn render_column(self, children: &Vec<Widget>, mut context: RenderContext) -> String {
         let mut buffer = String::new();
 
         for child in children {
@@ -78,10 +67,7 @@ impl CompositorType {
     }
 }
 
-impl<T> Widget<T>
-where
-    T: Event,
-{
+impl Widget {
     /// Add a child widget to this one, panicking if self isn't a compositor.
     pub fn add_child(&mut self, child: Self) {
         let Self::Compositor {

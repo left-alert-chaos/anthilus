@@ -19,7 +19,7 @@ where
     fn init(&mut self) {}
 
     /// Build the interface and return a root widget.
-    fn build(&self) -> Option<Widget<T>> {
+    fn build(&self) -> Option<Widget> {
         Some(Widget::Label(String::from("Hello, world!")))
     }
 

@@ -35,7 +35,7 @@ impl State<Message> for MyApp {
         }
     }
 
-    fn build(&self) -> Option<Widget<Message>> {
+    fn build(&self) -> Option<Widget> {
         Some(col![
             Widget::Label(self.letters.clone()),
             Widget::Label(format!("It's been {} seconds.", self.seconds))
