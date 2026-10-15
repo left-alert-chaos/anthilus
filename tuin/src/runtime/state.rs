@@ -3,13 +3,17 @@
 
 use crate::*;
 
-use std::{io::{self, Write}, time::{Instant, Duration}};
+use std::{
+    io::{self, Write},
+    time::{Duration, Instant},
+};
 
 /// # State
 /// All behavior needed to store an app's persistent state.
 /// Everything has a default implementation, so it can be implemented with no work.
 pub trait State<T>
-where T: Event
+where
+    T: Event,
 {
     /// Called once before event loop starts. It's optional and the default behavior does nothing.
     fn init(&mut self) {}
@@ -34,7 +38,7 @@ where T: Event
         loop {
             // clear the screen
             print!("\x1b[H\x1b[2J\x1b[3J");
-            
+
             // build, render and draw the UI
             let context = RenderContext::default();
             let rendered: String = match self.build() {
@@ -44,7 +48,9 @@ where T: Event
             print!("{rendered}");
             let _ = io::stdout().flush();
 
-            if let Some(function) = &callback && let Some(message) = function(&mut info) {
+            if let Some(function) = &callback
+                && let Some(message) = function(&mut info)
+            {
                 self.update(message);
             }
 

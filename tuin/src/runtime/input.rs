@@ -11,13 +11,17 @@ unsafe extern "C" {
 /// # raw_mode()
 /// Enter raw mode.
 pub fn raw_mode() {
-    unsafe { c_enter_raw_mode(); }
+    unsafe {
+        c_enter_raw_mode();
+    }
 }
 
 /// # exit_raw_mode()
 /// Exit raw mode.
 pub fn exit_raw_mode() {
-    unsafe { c_exit_raw_mode(); }
+    unsafe {
+        c_exit_raw_mode();
+    }
 }
 
 /// # Input

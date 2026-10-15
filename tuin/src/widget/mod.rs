@@ -3,8 +3,8 @@
 
 mod compositor;
 
-pub use compositor::CompositorType;
 use crate::*;
+pub use compositor::CompositorType;
 
 use std::fmt;
 
@@ -13,7 +13,8 @@ use std::fmt;
 /// T is a Message that some widgets emit when interacted with.
 #[derive(Eq, PartialEq, Clone)]
 pub enum Widget<T>
-where T: Clone + fmt::Debug
+where
+    T: Clone + fmt::Debug,
 {
     Label(String),
     Compositor {
@@ -24,11 +25,15 @@ where T: Clone + fmt::Debug
 }
 
 impl<T> Widget<T>
-where T: Event
+where
+    T: Event,
 {
     /// Create a new compositor with the given layout type
     pub fn new_compositor(compositor_type: CompositorType) -> Self {
-        Self::Compositor { children: Vec::new(), compositor_type }
+        Self::Compositor {
+            children: Vec::new(),
+            compositor_type,
+        }
     }
 
     /// Render the widget into a `Render` object
@@ -36,9 +41,10 @@ where T: Event
         match self {
             Self::Label(text) => Render::new(text.clone(), context),
             Self::Button(text, _) => Render::new(text.clone(), context),
-            Self::Compositor { children, compositor_type } => {
-                compositor_type.render(children, context)
-            }
+            Self::Compositor {
+                children,
+                compositor_type,
+            } => compositor_type.render(children, context),
         }
     }
 }

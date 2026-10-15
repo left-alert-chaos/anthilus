@@ -36,7 +36,7 @@ impl Render {
         Self {
             lines,
             width: width as u32,
-            context
+            context,
         }
     }
 
