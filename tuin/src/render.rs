@@ -58,9 +58,15 @@ impl From<Render> for String {
         let x = value.context.x;
         let mut y = value.context.y;
 
-        for line in value.lines {
+        for mut line in value.lines {
             // jump to the correct x coordinate
             buffer.push_str(format!("\x1b[{y};{x}H").as_str());
+
+            if line.len() > value.context.max_width as usize {
+                while line.len() > value.context.max_width as usize - 3 { line.pop(); }
+                line.push_str("...");
+            }
+
             buffer.push_str(line.as_str());
 
             y += 1;
