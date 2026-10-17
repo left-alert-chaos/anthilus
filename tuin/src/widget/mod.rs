@@ -19,6 +19,9 @@ pub enum Widget {
         children: Vec<Self>,
         compositor_type: CompositorType,
     },
+
+    /// A widget that displays nothing, used as padding between other widgets in a column.
+    Pad,
 }
 
 impl Widget {
@@ -38,6 +41,9 @@ impl Widget {
                 children,
                 compositor_type,
             } => compositor_type.render(children, context),
+            Self::Pad => {
+                Render::new(String::new(), context)
+            }
         }
     }
 }
