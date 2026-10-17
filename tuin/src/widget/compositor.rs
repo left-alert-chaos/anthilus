@@ -14,11 +14,14 @@ pub enum CompositorType {
 impl CompositorType {
     /// Handle rendering of a compositor's children
     pub fn render(self, children: &Vec<Widget>, context: RenderContext) -> Render {
-        let text = match self {
-            Self::Row => self.render_row(children, context),
-            Self::Column => self.render_column(children, context),
-        };
-        Render::new(text, context)
+        match self {
+            Self::Row => {
+                let mut render = Render::new(self.render_row(children, context), context);
+                render.context.max_width = None;
+                render
+            },
+            Self::Column => Render::new(self.render_column(children, context), context),
+        }
     }
 
     /// Handle rendering of a row's children. Returns a `String`, which will be converted to a
@@ -28,18 +31,21 @@ impl CompositorType {
 
         // Fix max width
         let number_of_children = children.len() as u32;
-        context.max_width -= number_of_children - 1; // padding
-        context.max_width /= number_of_children;
+        if let Some(mut max_width) = context.max_width {
+            max_width -= (number_of_children * context.row_pad) - 1; // padding
+            max_width /= number_of_children;
+            context.max_width = Some(max_width);
+        }
 
         for child in children {
             let render = child.render(context);
-            context.x += render.width() + 1;
+            context.x += render.width() + context.row_pad;
 
             buffer.push_str(<Render as Into<String>>::into(render).as_str());
 
             //x = context.x;
             //buffer.push_str(format!("\x1b[{y};{x}H").as_str());
-            buffer.push(' ');
+            buffer.push_str("  ");
         }
 
         buffer.pop();

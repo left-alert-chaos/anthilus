@@ -38,7 +38,11 @@ impl State<Message> for MyApp {
     fn build(&self) -> Option<Widget> {
         Some(col![
             Widget::Label(self.letters.clone()),
-            Widget::Label(format!("It's been {} seconds.", self.seconds))
+            Widget::Label(format!("It's been {} seconds.", self.seconds)),
+            row![
+                Widget::Label(String::from("This is a\nmultiline label!")),
+                Widget::Label(String::from("This is also a\nmultiline label!"))
+            ]
         ])
     }
 }

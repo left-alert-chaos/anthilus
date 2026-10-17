@@ -7,7 +7,7 @@
 pub struct Render {
     lines: Vec<String>,
     width: u32,
-    context: RenderContext,
+    pub context: RenderContext,
 }
 
 impl Render {
@@ -59,12 +59,15 @@ impl From<Render> for String {
         let mut y = value.context.y;
 
         for mut line in value.lines {
-            // jump to the correct x coordinate
             buffer.push_str(format!("\x1b[{y};{x}H").as_str());
 
-            if line.len() > value.context.max_width as usize {
-                while line.len() > value.context.max_width as usize - 3 { line.pop(); }
-                line.push_str("...");
+            if let Some(max_width) = value.context.max_width {
+                if line.len() > max_width as usize {
+                    while line.len() > max_width as usize { line.pop(); }
+                    line.push_str("...");
+                }
+
+                //while line.len() < max_width as usize { line.push(' '); }
             }
 
             buffer.push_str(line.as_str());
@@ -90,7 +93,10 @@ pub struct RenderContext {
     pub terminal_width: u32,
 
     /// The maximum width this widget is allowed to have.
-    pub max_width: u32,
+    pub max_width: Option<u32>,
+    
+    /// The horizontal padding to apply between widgets.
+    pub row_pad: u32,
 }
 
 impl Default for RenderContext {
@@ -100,7 +106,8 @@ impl Default for RenderContext {
             x: 1,
             y: 1,
             terminal_width: width,
-            max_width: width,
+            max_width: Some(width),
+            row_pad: 2,
         }
     }
 }
