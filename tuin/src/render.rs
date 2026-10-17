@@ -62,12 +62,10 @@ impl From<Render> for String {
             buffer.push_str(format!("\x1b[{y};{x}H").as_str());
 
             if let Some(max_width) = value.context.max_width {
-                if line.len() > max_width as usize {
-                    while line.len() > max_width as usize { line.pop(); }
+                if line.len() > (max_width - 1) as usize {
+                    while line.len() > (max_width - 3) as usize { line.pop(); }
                     line.push_str("...");
                 }
-
-                //while line.len() < max_width as usize { line.push(' '); }
             }
 
             buffer.push_str(line.as_str());
