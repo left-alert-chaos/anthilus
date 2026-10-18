@@ -1,6 +1,9 @@
 mod state;
 mod ui;
 
+use tuin::State;
+
 fn main() {
-    println!("Hello, world!");
+    let mut state = state::Anthilus::new();
+    state.event_loop(None);
 }

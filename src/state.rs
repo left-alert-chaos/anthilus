@@ -5,6 +5,7 @@ use crate::ui::*;
 #[derive(Clone, Copy, Debug)]
 pub enum Message {
     Input(Input),
+    Reload,
 }
 
 impl From<Input> for Message {
@@ -33,5 +34,15 @@ impl State<Message> for Anthilus {
             root.add_child(pane.build());
         }
         Some(root)
+    }
+}
+
+impl Anthilus {
+    pub fn new() -> Self {
+        Self {
+            panes: vec![Pane::new(".")],
+            hovered_pane: 0,
+            quit: false,
+        }
     }
 }

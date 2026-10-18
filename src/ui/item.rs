@@ -8,6 +8,14 @@ pub struct Item {
 }
 
 impl Item {
+    pub fn new(name: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            expanded: false,
+            hovered: false,
+        }
+    }
+
     pub fn build(&self) -> Widget {
         let mut text = self.name.clone();
 
