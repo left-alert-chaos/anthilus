@@ -7,13 +7,16 @@ use std::path;
 pub struct Pane {
     path: Box<path::Path>, // path path path path path path path path path path    
     items: Vec<super::item::Item>,
-    highlighted_item: usize,
+    highlighted_item_name: String,
 }
 
 impl Pane {
     /// Build a column of widgets to represent this Pane.
     pub fn build(&self) -> Widget {
-        let mut column = Widget::new_compositor(CompositorType::Column);
+        let mut column = col![
+            Widget::Label(self.path.to_str().unwrap_or("[unknown path]").to_string()),
+            Widget::Pad
+        ];
 
         for item in &self.items {
             column.add_child(item.build());
