@@ -40,42 +40,67 @@ impl Pane {
 
     /// Remove existing items and replace with up-to-date ones.
     pub fn populate(&mut self) {
+        let hovered_name = if let Some(item) = self.hovered_item() {
+            item.name()
+        } else {
+            String::from("[unknown file name]")
+        };
+
         self.items.clear();
         
         let Ok(files) = read_dir(*self.path.clone()) else {
             return;
         };
 
+        let mut should_set_index = true;
+
         for file in files {
             if let Ok(entry) = file {
-                let name = format!("{:?}", entry.path());
+                let name = format_path(entry.path());
                 self.items.push(super::Item::new(&name));
+
+                if name == hovered_name {
+                    self.hovered_item_index = self.items.len() - 1;
+                    should_set_index = false;
+                }
             }
         }
 
-        self.hovered_item_index = self.items.len() - 1;
-        self.hovered_item().hovered = true;
+        if should_set_index {
+            self.hovered_item_index = self.items.len() - 1;
+        }
+        if let Some(item) = self.hovered_item() {
+            item.hovered = true;
+        }
     }
 
     /// Move the highlight down one, if possible.
     pub fn move_highlight_down(&mut self) {
         if self.hovered_item_index < self.items.len() - 1 {
-            self.hovered_item().hovered = false;
+            self.hovered_item().unwrap().hovered = false;
             self.hovered_item_index += 1;
-            self.hovered_item().hovered = true;
+            self.hovered_item().unwrap().hovered = true;
         }
     }
 
     /// Move the highlight up one, if possible.
     pub fn move_highlight_up(&mut self) {
         if self.hovered_item_index > 0 {
-            self.hovered_item().hovered = false;
+            self.hovered_item().unwrap().hovered = false;
             self.hovered_item_index -= 1;
-            self.hovered_item().hovered = true;
+            self.hovered_item().unwrap().hovered = true;
         }
     }
 
-    fn hovered_item(&mut self) -> &mut Item {
-        &mut self.items[self.hovered_item_index]
+    fn hovered_item(&mut self) -> Option<&mut Item> {
+        if !self.items.is_empty() && self.hovered_item_index < self.items.len() {
+            Some(&mut self.items[self.hovered_item_index])
+        } else {
+            None
+        }
     }
+}
+
+fn format_path(path: PathBuf) -> String {
+    path.into_string().unwrap_or(String::from("[couldn't decode name]"))
 }

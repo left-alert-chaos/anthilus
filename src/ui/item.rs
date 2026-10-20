@@ -27,4 +27,8 @@ impl Item {
 
         Widget::Label(text)
     }
+
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
 }
