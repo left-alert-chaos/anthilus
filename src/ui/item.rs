@@ -4,7 +4,7 @@ use tuin::*;
 pub struct Item {
     name: String,
     expanded: bool,
-    hovered: bool,
+    pub hovered: bool,
 }
 
 impl Item {
@@ -21,8 +21,8 @@ impl Item {
 
         // invert colors if hovered
         if self.hovered {
-            text.insert_str(0, "\x1b[7m");
-            text.push_str("\x1b[27m");
+            text.insert_str(0, "\x1b[1;31m");
+            text.push_str("\x1b[0m");
         }
 
         Widget::Label(text)

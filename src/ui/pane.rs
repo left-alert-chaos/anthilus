@@ -7,7 +7,7 @@ use std::{path::PathBuf, fs::read_dir};
 pub struct Pane {
     path: Box<PathBuf>,
     items: Vec<super::item::Item>,
-    highlighted_item_name: String,
+    highlighted_item_index: usize,
 }
 
 impl Pane {
@@ -16,7 +16,7 @@ impl Pane {
         let mut new = Self {
             path: Box::new(dir.into()),
             items: vec![],
-            highlighted_item_name: String::new(),
+            highlighted_item_index: 0,
         };
         new.populate();
         new
@@ -44,14 +44,32 @@ impl Pane {
             return;
         };
 
-        let mut name: String = String::from("blahblahblah");
         for file in files {
             if let Ok(entry) = file {
-                name = format!("{:?}", entry.path());
+                let name = format!("{:?}", entry.path());
                 self.items.push(super::Item::new(&name));
             }
         }
 
-        self.highlighted_item_name = name;
+        self.highlighted_item_index = self.items.len() - 1;
+        self.items[self.highlighted_item_index].hovered = true;
+    }
+
+    /// Move the highlight down one, if possible.
+    pub fn move_highlight_down(&mut self) {
+        if self.highlighted_item_index < self.items.len() - 1 {
+            self.items[self.highlighted_item_index].hovered = false;
+            self.highlighted_item_index += 1;
+            self.items[self.highlighted_item_index].hovered = true;
+        }
+    }
+
+    /// Move the highlight up one, if possible.
+    pub fn move_highlight_up(&mut self) {
+        if self.highlighted_item_index > 0 {
+            self.items[self.highlighted_item_index].hovered = false;
+            self.highlighted_item_index -= 1;
+            self.items[self.highlighted_item_index].hovered = true;
+        }
     }
 }

@@ -21,6 +21,7 @@ pub struct Anthilus {
     panes: Vec<Pane>,
     hovered_pane: usize,
     quit: bool,
+    cursor_state: CursorState,
 }
 
 impl State<Message> for Anthilus {
@@ -35,6 +36,13 @@ impl State<Message> for Anthilus {
         }
         Some(root)
     }
+
+    fn update(&mut self, event: Message) {
+        match event {
+            Message::Input(input) => self.update_input(input),
+            Message::Reload => self.get_hovered_pane().populate(),
+        }
+    }
 }
 
 impl Anthilus {
@@ -43,6 +51,43 @@ impl Anthilus {
             panes: vec![Pane::new(".")],
             hovered_pane: 0,
             quit: false,
+            cursor_state: CursorState::Hovering,
         }
     }
+
+    fn update_input(&mut self, input: Input) {
+        match self.cursor_state {
+            CursorState::Hovering => self.update_input_hovering(input),
+            CursorState::Typing => self.update_input_typing(input),
+        }
+    }
+
+    fn update_input_hovering(&mut self, input: Input) {
+        match input {
+            Input::Left | Input::Character('h') => if self.hovered_pane > 0 {
+                self.hovered_pane -= 1;
+            }
+            Input::Right | Input::Character('l') => if self.hovered_pane < self.panes.len() - 1 {
+                self.hovered_pane += 1;
+            }
+            Input::Up | Input::Character('k') => self.get_hovered_pane().move_highlight_up(),
+            Input::Down | Input::Character('j') => self.get_hovered_pane().move_highlight_down(),
+            Input::Character('q') => self.quit = true,
+            _ => {}
+        }
+    }
+
+    fn update_input_typing(&mut self, input: Input) {
+
+    }
+
+    fn get_hovered_pane(&mut self) -> &mut Pane {
+        &mut self.panes[self.hovered_pane]
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum CursorState {
+    Typing,
+    Hovering,
 }
