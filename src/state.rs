@@ -2,6 +2,8 @@ use tuin::*;
 
 use crate::ui::*;
 
+use std::time::Duration;
+
 #[derive(Clone, Copy, Debug)]
 pub enum Message {
     Input(Input),
@@ -77,9 +79,7 @@ impl Anthilus {
         }
     }
 
-    fn update_input_typing(&mut self, input: Input) {
-
-    }
+    fn update_input_typing(&mut self, _input: Input) {}
 
     fn get_hovered_pane(&mut self) -> &mut Pane {
         &mut self.panes[self.hovered_pane]
@@ -90,4 +90,15 @@ impl Anthilus {
 enum CursorState {
     Typing,
     Hovering,
+}
+
+/// Run as a callback every frame
+pub fn check_reload(info: &mut RuntimeInfo) -> Option<Message> {
+    // reload every 5 seconds
+    if info.elapsed() >= Duration::new(5, 0) {
+        info.reset_clock();
+        Some(Message::Reload)
+    } else {
+        None
+    }
 }
