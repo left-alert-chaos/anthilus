@@ -1,13 +1,15 @@
 use tuin::*;
 
+use super::item::Item;
+
 use std::{path::PathBuf, fs::read_dir};
 
 /// One pane in the UI
 #[derive(Clone, Debug)]
 pub struct Pane {
     path: Box<PathBuf>,
-    items: Vec<super::item::Item>,
-    highlighted_item_index: usize,
+    items: Vec<Item>,
+    hovered_item_index: usize,
 }
 
 impl Pane {
@@ -16,7 +18,7 @@ impl Pane {
         let mut new = Self {
             path: Box::new(dir.into()),
             items: vec![],
-            highlighted_item_index: 0,
+            hovered_item_index: 0,
         };
         new.populate();
         new
@@ -51,25 +53,29 @@ impl Pane {
             }
         }
 
-        self.highlighted_item_index = self.items.len() - 1;
-        self.items[self.highlighted_item_index].hovered = true;
+        self.hovered_item_index = self.items.len() - 1;
+        self.hovered_item().hovered = true;
     }
 
     /// Move the highlight down one, if possible.
     pub fn move_highlight_down(&mut self) {
-        if self.highlighted_item_index < self.items.len() - 1 {
-            self.items[self.highlighted_item_index].hovered = false;
-            self.highlighted_item_index += 1;
-            self.items[self.highlighted_item_index].hovered = true;
+        if self.hovered_item_index < self.items.len() - 1 {
+            self.hovered_item().hovered = false;
+            self.hovered_item_index += 1;
+            self.hovered_item().hovered = true;
         }
     }
 
     /// Move the highlight up one, if possible.
     pub fn move_highlight_up(&mut self) {
-        if self.highlighted_item_index > 0 {
-            self.items[self.highlighted_item_index].hovered = false;
-            self.highlighted_item_index -= 1;
-            self.items[self.highlighted_item_index].hovered = true;
+        if self.hovered_item_index > 0 {
+            self.hovered_item().hovered = false;
+            self.hovered_item_index -= 1;
+            self.hovered_item().hovered = true;
         }
+    }
+
+    fn hovered_item(&mut self) -> &mut Item {
+        &mut self.items[self.hovered_item_index]
     }
 }
