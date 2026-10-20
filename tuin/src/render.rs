@@ -17,14 +17,16 @@ impl Render {
         let mut width = 0;
 
         for line in value.split('\n') {
-            let mut line = line.trim().to_string();
+            let line = line.trim().to_string();
 
+            /*
             if line.starts_with("\x1b") {
                 while !line.starts_with('H') {
                     line.remove(0);
                 }
                 line.remove(0);
             }
+            */
 
             if line.len() > width {
                 width = line.len();
