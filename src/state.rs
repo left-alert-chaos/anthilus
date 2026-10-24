@@ -1,9 +1,9 @@
 use tuin::*;
 
-use crate::ui::*;
 use crate::logging::log;
+use crate::ui::*;
 
-use std::{time::Duration, fs};
+use std::{fs, time::Duration};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Message {
@@ -67,11 +67,15 @@ impl Anthilus {
 
     fn update_input_hovering(&mut self, input: Input) {
         match input {
-            Input::Left | Input::Character('h') => if self.hovered_pane > 0 {
-                self.hovered_pane -= 1;
+            Input::Left | Input::Character('h') => {
+                if self.hovered_pane > 0 {
+                    self.hovered_pane -= 1;
+                }
             }
-            Input::Right | Input::Character('l') => if self.hovered_pane < self.panes.len() - 1 {
-                self.hovered_pane += 1;
+            Input::Right | Input::Character('l') => {
+                if self.hovered_pane < self.panes.len() - 1 {
+                    self.hovered_pane += 1;
+                }
             }
             Input::Up | Input::Character('k') => self.get_hovered_pane().move_highlight_up(),
             Input::Down | Input::Character('j') => self.get_hovered_pane().move_highlight_down(),

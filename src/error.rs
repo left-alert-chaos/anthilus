@@ -8,7 +8,7 @@ pub enum AnthilusError {
 impl fmt::Display for AnthilusError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let text = match self {
-            Self::NoUsername => "couldn't determine username"
+            Self::NoUsername => "couldn't determine username",
         };
         write!(f, "{text}")
     }

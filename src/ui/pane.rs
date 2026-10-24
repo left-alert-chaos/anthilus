@@ -2,7 +2,7 @@ use tuin::*;
 
 use super::item::Item;
 
-use std::{path::PathBuf, fs::read_dir};
+use std::{fs::read_dir, path::PathBuf};
 
 /// One pane in the UI
 #[derive(Clone, Debug)]
@@ -47,7 +47,7 @@ impl Pane {
         };
 
         self.items.clear();
-        
+
         let Ok(files) = read_dir(*self.path.clone()) else {
             return;
         };
@@ -115,5 +115,9 @@ impl Pane {
 }
 
 fn format_path(path: PathBuf) -> String {
-    path.into_string().unwrap_or(String::from("  [couldn't decode name]")).split_at(2).1.to_string()
+    path.into_string()
+        .unwrap_or(String::from("  [couldn't decode name]"))
+        .split_at(2)
+        .1
+        .to_string()
 }
