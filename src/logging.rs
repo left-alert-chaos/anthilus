@@ -15,3 +15,10 @@ pub fn log(s: impl ToString) -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+pub fn print_logs() -> Result<(), Box<dyn Error>> {
+    log("printing logs")?;
+    let user = crate::username::username()?;
+    println!("{}", String::from_utf8(fs::read(format!("/home/{user}/.cache/anthilus/anthilus.log"))?)?);
+    Ok(())
+}
