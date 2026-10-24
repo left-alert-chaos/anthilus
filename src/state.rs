@@ -75,6 +75,7 @@ impl Anthilus {
             Input::Up | Input::Character('k') => self.get_hovered_pane().move_highlight_up(),
             Input::Down | Input::Character('j') => self.get_hovered_pane().move_highlight_down(),
             Input::Character('q') => self.quit = true,
+            Input::Character('r') => self.get_hovered_pane().populate(),
             _ => {}
         }
     }
