@@ -1,8 +1,9 @@
 use tuin::*;
 
 use crate::ui::*;
+use crate::logging::log;
 
-use std::time::Duration;
+use std::{time::Duration, fs};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Message {
@@ -76,7 +77,20 @@ impl Anthilus {
             Input::Down | Input::Character('j') => self.get_hovered_pane().move_highlight_down(),
             Input::Character('q') => self.quit = true,
             Input::Character('r') => self.get_hovered_pane().populate(),
+            Input::Return => self.select(),
             _ => {}
+        }
+    }
+
+    fn select(&mut self) {
+        let path = self.get_hovered_pane().hovered_item_path();
+        let _ = log(format!("path is {path:?}"));
+        if path.is_dir() {
+            self.get_hovered_pane().change_directory(path);
+            let _ = log("changing dir");
+        } else if let Some(item) = self.get_hovered_pane().hovered_item() {
+            let _ = log("expanding");
+            item.expand();
         }
     }
 

@@ -1,6 +1,9 @@
 mod state;
 mod ui;
 mod logging;
+mod username;
+mod error;
+use error::*;
 
 use tuin::State;
 

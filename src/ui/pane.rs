@@ -92,7 +92,20 @@ impl Pane {
         }
     }
 
-    fn hovered_item(&mut self) -> Option<&mut Item> {
+    /// Switch to given path and repopulate
+    pub fn change_directory(&mut self, path: impl Into<PathBuf>) {
+        *self.path = path.into();
+        self.populate();
+    }
+
+    /// Get the path of the currently hovered item
+    pub fn hovered_item_path(&mut self) -> PathBuf {
+        let mut path = *self.path.clone();
+        path.push(self.hovered_item().unwrap().name());
+        path
+    }
+
+    pub fn hovered_item(&mut self) -> Option<&mut Item> {
         if !self.items.is_empty() && self.hovered_item_index < self.items.len() {
             Some(&mut self.items[self.hovered_item_index])
         } else {
@@ -102,5 +115,5 @@ impl Pane {
 }
 
 fn format_path(path: PathBuf) -> String {
-    path.into_string().unwrap_or(String::from("[couldn't decode name]"))
+    path.into_string().unwrap_or(String::from("  [couldn't decode name]")).split_at(2).1.to_string()
 }
