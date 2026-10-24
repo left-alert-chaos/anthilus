@@ -16,12 +16,12 @@ impl Item {
         }
     }
 
-    pub fn build(&self) -> Widget {
+    pub fn build(&self, pane_is_hovered: bool) -> Widget {
         let mut text = self.name.clone();
 
         // invert colors if hovered
-        if self.hovered {
-            text.insert_str(0, "\x1b[1;31m");
+        if self.hovered && pane_is_hovered {
+            text.insert_str(0, "\x1b[1;31m ");
             text.push_str("\x1b[0m");
         }
 

@@ -10,6 +10,7 @@ pub struct Pane {
     path: Box<PathBuf>,
     items: Vec<Item>,
     hovered_item_index: usize,
+    pub hovered: bool,
 }
 
 impl Pane {
@@ -19,6 +20,7 @@ impl Pane {
             path: Box::new(dir.into()),
             items: vec![],
             hovered_item_index: 0,
+            hovered: true,
         };
         new.populate();
         new
@@ -32,7 +34,7 @@ impl Pane {
         ];
 
         for item in &self.items {
-            column.add_child(item.build());
+            column.add_child(item.build(self.hovered));
         }
 
         column
