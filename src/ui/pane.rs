@@ -118,8 +118,10 @@ impl Pane {
 
 fn format_path(path: PathBuf) -> String {
     path.into_string()
-        .unwrap_or(String::from("  [couldn't decode name]"))
-        .split_at(2)
-        .1
+        .unwrap_or(String::from("[couldn't decode name]"))
+        .split("/")
+        .into_iter()
+        .last()
+        .unwrap_or("[couldn't decode name]")
         .to_string()
 }
