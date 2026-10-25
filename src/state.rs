@@ -3,7 +3,7 @@ use tuin::*;
 use crate::logging::log;
 use crate::ui::*;
 
-use std::{fs, time::Duration};
+use std::time::Duration;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Message {
@@ -95,10 +95,16 @@ impl Anthilus {
             Input::Character('r') => self.get_hovered_pane().populate(),
             Input::Return => self.select(),
             Input::Character('p') => self.new_pane(),
+            Input::Backspace => self.up(),
             _ => {
                 let _ = log(format!("recieved unused input {input:?}"));
             },
         }
+    }
+
+    fn up(&mut self) {
+        self.get_hovered_pane().path.pop();
+        self.get_hovered_pane().populate();
     }
 
     fn new_pane(&mut self) {
@@ -118,7 +124,8 @@ impl Anthilus {
         let path = self.get_hovered_pane().hovered_item_path();
         let _ = log(format!("path is {path:?}"));
         if path.is_dir() {
-            self.get_hovered_pane().change_directory(path);
+            *self.get_hovered_pane().path = path;
+            self.get_hovered_pane().populate();
             let _ = log("changing dir");
         } else if let Some(item) = self.get_hovered_pane().hovered_item() {
             let _ = log("expanding");
@@ -134,6 +141,7 @@ impl Anthilus {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
 enum CursorState {
     Typing,
     Hovering,

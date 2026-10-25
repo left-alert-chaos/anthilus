@@ -34,6 +34,7 @@ pub enum Input {
     Down,
     Left,
     Right,
+    Backspace,
     Character(char),
 }
 
@@ -50,6 +51,7 @@ impl Input {
             '\n' => Self::Return,
             '\t' => Self::Tab,
             '\x1b' => Self::parse_direction()?,
+            '\u{7f}' => Self::Backspace,
             _ => Self::Character(character),
         })
     }
