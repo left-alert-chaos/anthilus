@@ -96,9 +96,7 @@ impl Anthilus {
             Input::Return => self.select(),
             Input::Character('p') => self.new_pane(),
             Input::Backspace => self.up(),
-            _ => {
-                let _ = log(format!("recieved unused input {input:?}"));
-            },
+            _ => log(format!("recieved unused input {input:?}")),
         }
     }
 
@@ -122,13 +120,13 @@ impl Anthilus {
 
     fn select(&mut self) {
         let path = self.get_hovered_pane().hovered_item_path();
-        let _ = log(format!("path is {path:?}"));
+        log(format!("path is {path:?}"));
         if path.is_dir() {
             *self.get_hovered_pane().path = path;
             self.get_hovered_pane().populate();
-            let _ = log("changing dir");
+            log("changing dir");
         } else if let Some(item) = self.get_hovered_pane().hovered_item() {
-            let _ = log("expanding");
+            log("expanding");
             item.expand();
         }
     }
