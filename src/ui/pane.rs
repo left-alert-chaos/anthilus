@@ -68,7 +68,7 @@ impl Pane {
             }
         }
 
-        if should_set_index {
+        if should_set_index && !self.items.is_empty() {
             self.hovered_item_index = self.items.len() - 1;
         }
         if let Some(item) = self.hovered_item() {
@@ -78,7 +78,7 @@ impl Pane {
 
     /// Move the highlight down one, if possible.
     pub fn move_highlight_down(&mut self) {
-        if self.hovered_item_index < self.items.len() - 1 {
+        if !self.items.is_empty() && self.hovered_item_index < self.items.len() - 1 {
             self.hovered_item().unwrap().hovered = false;
             self.hovered_item_index += 1;
             self.hovered_item().unwrap().hovered = true;
