@@ -35,7 +35,7 @@ impl CompositorType {
             max_width -= (number_of_children * context.row_pad) - 1; // padding
             max_width /= number_of_children;
             context.max_width = Some(max_width);
-            eprintln!("max width is {max_width}");
+            log(format!("max width is {max_width}"));
         }
 
         for child in children {
