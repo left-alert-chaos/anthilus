@@ -29,7 +29,7 @@ impl Pane {
     /// Build a column of widgets to represent this Pane.
     pub fn build(&self) -> Widget {
         let mut column = col![
-            Widget::Label(self.path.to_str().unwrap_or("[unknown path]").to_string()),
+            Widget::Label(format_path(*self.path.clone())),
             Widget::Pad
         ];
 

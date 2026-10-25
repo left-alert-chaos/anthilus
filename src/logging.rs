@@ -3,7 +3,7 @@ use std::error::Error;
 use tuin::{print_program_logs, program_log};
 
 pub fn log(s: impl ToString) {
-    program_log(s, "anthilus");
+    let _ = program_log(s, "anthilus");
 }
 
 pub fn print_logs() -> Result<(), Box<dyn Error>> {
