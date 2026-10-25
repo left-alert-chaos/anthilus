@@ -19,6 +19,7 @@ impl Render {
         for line in value.split('\n') {
             let line = line.trim().to_string();
 
+            /*
             // separate line is checked for width so that ansi codes aren't counted
             let mut length_check_line = line.clone();
             if length_check_line.starts_with("\x1b") {
@@ -37,6 +38,12 @@ impl Render {
 
             if length_check_line.len() > width {
                 width = length_check_line.len();
+            }
+            */
+
+            let len = line_length(line.clone());
+            if len > width {
+                width = len;
             }
 
             lines.push(line);
@@ -71,9 +78,15 @@ impl From<Render> for String {
             buffer.push_str(format!("\x1b[{y};{x}H").as_str());
 
             if let Some(max_width) = value.context.max_width {
-                if line.len() > (max_width - 1) as usize {
+                if line_length(line.clone()) > (max_width - 1) as usize {
+                    // store escapes while other characters are trimmed so that styling is preserved
+                    let mut escapes = String::new();
+                    while line.contains('\x1b') { escapes.push(line.pop().unwrap()); }
+
                     while line.len() > (max_width - 3) as usize { line.pop(); }
                     line.push_str("...");
+
+                    while !escapes.is_empty() { line.push(escapes.pop().unwrap()); }
                 }
             }
 
@@ -117,4 +130,23 @@ impl Default for RenderContext {
             row_pad: 2,
         }
     }
+}
+
+/// Get the line length after removing ANSI codes
+pub fn line_length(mut line: String) -> usize {
+    if line.starts_with("\x1b") {
+        // spaces are used to indent items, so they can be used as a marker of the end of an
+        // ansi code
+        while !(line.starts_with('H') || line.starts_with(' ')) {
+            line.remove(0);
+        }
+        
+        if line.starts_with('H') {
+            line.remove(0);
+        }
+    }
+
+    while line.contains('\x1b') { line.pop(); }
+
+    line.len()
 }
