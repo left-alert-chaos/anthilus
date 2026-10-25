@@ -1,16 +1,11 @@
 use std::{error::Error, fmt};
 
 #[derive(Copy, Clone, Debug)]
-pub enum AnthilusError {
-    NoUsername,
-}
+pub enum AnthilusError {}
 
 impl fmt::Display for AnthilusError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let text = match self {
-            Self::NoUsername => "couldn't determine username",
-        };
-        write!(f, "{text}")
+        write!(f, "anthilus had an error")
     }
 }
 

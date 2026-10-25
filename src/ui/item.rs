@@ -35,8 +35,4 @@ impl Item {
     pub fn expand(&mut self) {
         self.expanded = true;
     }
-
-    pub fn shrink(&mut self) {
-        self.expanded = false;
-    }
 }

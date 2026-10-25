@@ -7,7 +7,7 @@ use std::{fs::read_dir, path::PathBuf};
 /// One pane in the UI
 #[derive(Clone, Debug)]
 pub struct Pane {
-    path: Box<PathBuf>,
+    pub path: Box<PathBuf>,
     items: Vec<Item>,
     hovered_item_index: usize,
     pub hovered: bool,
@@ -92,12 +92,6 @@ impl Pane {
             self.hovered_item_index -= 1;
             self.hovered_item().unwrap().hovered = true;
         }
-    }
-
-    /// Switch to given path and repopulate
-    pub fn change_directory(&mut self, path: impl Into<PathBuf>) {
-        *self.path = path.into();
-        self.populate();
     }
 
     /// Get the path of the currently hovered item
