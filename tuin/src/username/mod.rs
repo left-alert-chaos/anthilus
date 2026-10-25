@@ -1,12 +1,10 @@
-use crate::AnthilusError;
-
 use std::ffi::c_char;
 
 unsafe extern "C" {
     fn c_user() -> *const c_char;
 }
 
-pub fn username() -> Result<String, AnthilusError> {
+pub fn username() -> String {
     unsafe {
         let mut ptr = c_user().as_ref().unwrap() as *const i8 as *const u8;
         let mut username = String::new();
@@ -21,6 +19,6 @@ pub fn username() -> Result<String, AnthilusError> {
             ptr = ptr.add(1);
         }
 
-        Ok(username)
+        username
     }
 }

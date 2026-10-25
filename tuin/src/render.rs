@@ -17,29 +17,7 @@ impl Render {
         let mut width = 0;
 
         for line in value.split('\n') {
-            let line = line.trim().to_string();
-
-            /*
-            // separate line is checked for width so that ansi codes aren't counted
-            let mut length_check_line = line.clone();
-            if length_check_line.starts_with("\x1b") {
-                // spaces are used to indent items, so they can be used as a marker of the end of an
-                // ansi code
-                while !(length_check_line.starts_with('H') || length_check_line.starts_with(' ')) {
-                    length_check_line.remove(0);
-                }
-                
-                if length_check_line.starts_with('H') {
-                    length_check_line.remove(0);
-                }
-            }
-
-            while length_check_line.contains("\x1b") { length_check_line.pop(); }
-
-            if length_check_line.len() > width {
-                width = length_check_line.len();
-            }
-            */
+            let line = line.to_string();
 
             let len = line_length(line.clone());
             if len > width {
@@ -83,7 +61,7 @@ impl From<Render> for String {
                     let mut escapes = String::new();
                     while line.contains('\x1b') { escapes.push(line.pop().unwrap()); }
 
-                    while line.len() > (max_width - 3) as usize { line.pop(); }
+                    while line_length(line.clone()) > (max_width - 3) as usize { line.pop(); }
                     line.push_str("...");
 
                     while !escapes.is_empty() { line.push(escapes.pop().unwrap()); }
