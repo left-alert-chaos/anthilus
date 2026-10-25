@@ -68,22 +68,30 @@ impl Anthilus {
     fn update_input_hovering(&mut self, input: Input) {
         match input {
             Input::Left | Input::Character('h') => {
-                self.get_hovered_pane().hovered = false;
                 if self.hovered_pane > 0 {
+                    self.get_hovered_pane().hovered = false;
                     self.hovered_pane -= 1;
                     self.get_hovered_pane().hovered = true;
                 }
             }
             Input::Right | Input::Character('l') => {
-                self.get_hovered_pane().hovered = false;
                 if self.hovered_pane < self.panes.len() - 1 {
+                    self.get_hovered_pane().hovered = false;
                     self.hovered_pane += 1;
                     self.get_hovered_pane().hovered = true;
                 }
             }
             Input::Up | Input::Character('k') => self.get_hovered_pane().move_highlight_up(),
             Input::Down | Input::Character('j') => self.get_hovered_pane().move_highlight_down(),
-            Input::Character('q') => self.quit = true,
+            Input::Character('q') => {
+                self.panes.remove(self.hovered_pane);
+                if self.hovered_pane > 0 {
+                    self.hovered_pane -= 1;
+                    self.panes[self.hovered_pane].hovered = true;
+                } else if self.panes.is_empty() {
+                    self.quit = true;
+                }
+            }
             Input::Character('r') => self.get_hovered_pane().populate(),
             Input::Return => self.select(),
             Input::Character('p') => self.new_pane(),
@@ -96,9 +104,7 @@ impl Anthilus {
     fn new_pane(&mut self) {
         let path = self.get_hovered_pane().hovered_item_path();
 
-        if !path.is_dir() || self.panes.len() > 5 {
-            return;
-        }
+        if !path.is_dir() { return; }
 
         self.panes.push(
             Pane::new(path)
