@@ -6,6 +6,9 @@ edition = "2024"
 [dependencies]
 tuin = { path = "tuin" }
 
-[[bin]]
-name = "tuin"
-path = "tuin/src/main.rs"
+[build-dependencies]
+cc = "1.10.0"
+
+# [[bin]]
+# name = "tuin"
+# path = "tuin/src/main.rs"

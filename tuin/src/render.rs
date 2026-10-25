@@ -17,17 +17,26 @@ impl Render {
         let mut width = 0;
 
         for line in value.split('\n') {
-            let mut line = line.trim().to_string();
+            let line = line.trim().to_string();
 
-            if line.starts_with("\x1b") {
-                while !line.starts_with('H') {
-                    line.remove(0);
+            // separate line is checked for width so that ansi codes aren't counted
+            let mut length_check_line = line.clone();
+            if length_check_line.starts_with("\x1b") {
+                // spaces are used to indent items, so they can be used as a marker of the end of an
+                // ansi code
+                while !(length_check_line.starts_with('H') || length_check_line.starts_with(' ')) {
+                    length_check_line.remove(0);
                 }
-                line.remove(0);
+                
+                if length_check_line.starts_with('H') {
+                    length_check_line.remove(0);
+                }
             }
 
-            if line.len() > width {
-                width = line.len();
+            while length_check_line.contains("\x1b") { length_check_line.pop(); }
+
+            if length_check_line.len() > width {
+                width = length_check_line.len();
             }
 
             lines.push(line);
