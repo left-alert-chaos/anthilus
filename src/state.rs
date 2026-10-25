@@ -3,7 +3,7 @@ use tuin::*;
 use crate::logging::log;
 use crate::ui::*;
 
-use std::time::Duration;
+use std::{time::Duration, path::PathBuf};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Message {
@@ -101,7 +101,13 @@ impl Anthilus {
     }
 
     fn up(&mut self) {
-        self.get_hovered_pane().path.pop();
+        if *self.get_hovered_pane().path != PathBuf::from(".") {
+            self.get_hovered_pane().path.pop();
+        } else {
+            if let Ok(path) = std::path::absolute(*self.get_hovered_pane().path.clone()) {
+                *self.get_hovered_pane().path = path;
+            }
+        }
         self.get_hovered_pane().populate();
     }
 

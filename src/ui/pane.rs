@@ -97,7 +97,9 @@ impl Pane {
     /// Get the path of the currently hovered item
     pub fn hovered_item_path(&mut self) -> PathBuf {
         let mut path = *self.path.clone();
-        path.push(self.hovered_item().unwrap().name());
+        if let Some(item) = self.hovered_item() {
+            path.push(item.name());
+        }
         path
     }
 
