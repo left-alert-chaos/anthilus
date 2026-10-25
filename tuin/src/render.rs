@@ -33,6 +33,8 @@ impl Render {
                 }
             }
 
+            while length_check_line.contains("\x1b") { length_check_line.pop(); }
+
             if length_check_line.len() > width {
                 width = length_check_line.len();
             }
