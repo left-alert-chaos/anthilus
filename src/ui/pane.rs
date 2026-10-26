@@ -1,6 +1,7 @@
 use tuin::*;
 
 use super::item::Item;
+use crate::logging::log;
 
 use std::{fs::read_dir, path::PathBuf};
 
@@ -11,6 +12,7 @@ pub struct Pane {
     items: Vec<Item>,
     hovered_item_index: usize,
     pub hovered: bool,
+    pub first_row: usize,
 }
 
 impl Pane {
@@ -21,6 +23,7 @@ impl Pane {
             items: vec![],
             hovered_item_index: 0,
             hovered: true,
+            first_row: 0,
         };
         new.populate();
         new
@@ -33,7 +36,10 @@ impl Pane {
             Widget::Pad
         ];
 
-        for item in &self.items {
+        let mut last_row = self.first_row + height() - 2;
+        if last_row > self.items.len() { last_row = self.items.len(); }
+
+        for item in &self.items[self.first_row..last_row] {
             column.add_child(item.build(self.hovered));
         }
 
@@ -79,6 +85,10 @@ impl Pane {
     /// Move the highlight down one, if possible.
     pub fn move_highlight_down(&mut self) {
         if !self.items.is_empty() && self.hovered_item_index < self.items.len() - 1 {
+            if self.first_row + height() - 3 <= self.hovered_item_index {
+                log(format!("increasing row because hovered_item_index ({}) >= height - 3 ({})", self.hovered_item_index, height()));
+                self.first_row += 1;
+            }
             self.hovered_item().unwrap().hovered = false;
             self.hovered_item_index += 1;
             self.hovered_item().unwrap().hovered = true;
@@ -88,6 +98,9 @@ impl Pane {
     /// Move the highlight up one, if possible.
     pub fn move_highlight_up(&mut self) {
         if self.hovered_item_index > 0 {
+            if self.hovered_item_index == self.first_row && self.first_row > 0 {
+                self.first_row -= 1;
+            }
             self.hovered_item().unwrap().hovered = false;
             self.hovered_item_index -= 1;
             self.hovered_item().unwrap().hovered = true;

@@ -11,3 +11,4 @@ pub use runtime::*;
 pub use widget::*;
 pub use username::*;
 pub use logging::*;
+pub use size::*;
