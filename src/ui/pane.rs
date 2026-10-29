@@ -75,7 +75,8 @@ impl Pane {
         }
 
         if should_set_index && !self.items.is_empty() {
-            self.hovered_item_index = self.items.len() - 1;
+            self.hovered_item_index = 0;
+            self.first_row = 0;
         }
         if let Some(item) = self.hovered_item() {
             item.hovered = true;

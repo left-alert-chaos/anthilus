@@ -22,8 +22,8 @@ impl Item {
         // invert colors if hovered
         if self.hovered && pane_is_hovered {
             text.insert_str(0, "\x1b[1;31m ");
-            text.push_str("\x1b[0m");
         }
+        text.push_str("\x1b[0m");
 
         Widget::Label(text)
     }
