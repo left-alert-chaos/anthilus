@@ -85,6 +85,15 @@ impl Pane {
 
     /// Move the highlight down one, if possible.
     pub fn move_highlight_down(&mut self) {
+        if let Some(item) = self.hovered_item() && let Some(index) = &mut item.expanded_index {
+            *index += 1;
+            if *index > 2 {
+                item.expanded_index = None;
+            } else {
+                return;
+            }
+        }
+
         if !self.items.is_empty() && self.hovered_item_index < self.items.len() - 1 {
             if self.first_row + height() - 3 <= self.hovered_item_index {
                 log(format!("increasing row because hovered_item_index ({}) >= height - 3 ({})", self.hovered_item_index, height()));
@@ -98,6 +107,15 @@ impl Pane {
 
     /// Move the highlight up one, if possible.
     pub fn move_highlight_up(&mut self) {
+        if let Some(item) = self.hovered_item() && let Some(index) = &mut item.expanded_index {
+            if *index == 0 {
+                item.expanded_index = None;
+            } else {
+                *index -= 1;
+                return
+            }
+        }
+
         if self.hovered_item_index > 0 {
             if self.hovered_item_index == self.first_row && self.first_row > 0 {
                 self.first_row -= 1;

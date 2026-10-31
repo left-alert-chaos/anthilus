@@ -92,4 +92,17 @@ impl Widget {
             compositor_type: compositor_type.clone(),
         };
     }
+
+    /// Get a mutable reference to an item of x index.
+    pub fn child(&mut self, index: usize) -> Option<&mut Widget> {
+        let Self::Compositor { children, .. } = self else {
+            return None;
+        };
+
+        if index < children.len() {
+            Some(&mut children[index])
+        } else {
+            None
+        }
+    }
 }

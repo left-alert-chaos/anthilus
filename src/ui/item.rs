@@ -3,7 +3,7 @@ use tuin::*;
 #[derive(Clone, Debug)]
 pub struct Item {
     name: String,
-    expanded: bool,
+    pub expanded_index: Option<usize>,
     pub hovered: bool,
 }
 
@@ -11,7 +11,7 @@ impl Item {
     pub fn new(name: impl Into<String>) -> Self {
         Self {
             name: name.into(),
-            expanded: false,
+            expanded_index: None,
             hovered: false,
         }
     }
@@ -25,14 +25,33 @@ impl Item {
         }
         text.push_str("\x1b[0m");
 
-        Widget::Label(text)
+        let mut main = Widget::Label(text);
+
+        if let Some(index) = self.expanded_index {
+            main = col![
+                main,
+                Widget::Label(String::from("  test")),
+                Widget::Label(String::from("  another thing"))
+            ];
+
+            if let Some(Widget::Label(string)) = main.child(index) && index != 0 {
+                string.insert_str(0, "\x1b[1;31m ");
+                string.push_str("\x1b[0m");
+            }
+        }
+
+        main
     }
 
     pub fn name(&self) -> String {
         self.name.clone()
     }
 
-    pub fn expand(&mut self) {
-        self.expanded = true;
+    pub fn toggle_expand(&mut self) {
+        if self.expanded_index.is_some() {
+            self.expanded_index = None;
+        } else {
+            self.expanded_index = Some(0);
+        }
     }
 }

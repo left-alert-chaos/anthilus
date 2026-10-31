@@ -133,7 +133,7 @@ impl Anthilus {
             log("changing dir");
         } else if let Some(item) = self.get_hovered_pane().hovered_item() {
             log("expanding");
-            item.expand();
+            item.toggle_expand();
         }
     }
 
