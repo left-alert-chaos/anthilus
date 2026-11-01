@@ -1,5 +1,8 @@
 use tuin::*;
 
+/// The names of the options shown when an item is expanded
+pub static DROPDOWN_ITEM_NAMES: [&'static str; 1] = ["Delete"];
+
 #[derive(Clone, Debug)]
 pub struct Item {
     name: String,
@@ -28,11 +31,11 @@ impl Item {
         let mut main = Widget::Label(text);
 
         if let Some(index) = self.expanded_index {
-            main = col![
-                main,
-                Widget::Label(String::from("  test")),
-                Widget::Label(String::from("  another thing"))
-            ];
+            main = col![main];
+
+            for name in DROPDOWN_ITEM_NAMES {
+                main.add_child(Widget::Label(format!("  {name}")));
+            }
 
             if let Some(Widget::Label(string)) = main.child(index) && index != 0 {
                 string.insert_str(0, "\x1b[1;31m ");

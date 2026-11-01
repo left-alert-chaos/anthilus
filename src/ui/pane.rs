@@ -1,7 +1,7 @@
 use tuin::*;
 
 use super::item::Item;
-use crate::logging::log;
+use crate::{ui::DROPDOWN_ITEM_NAMES, logging::log};
 
 use std::{fs::read_dir, path::PathBuf};
 
@@ -87,7 +87,7 @@ impl Pane {
     pub fn move_highlight_down(&mut self) {
         if let Some(item) = self.hovered_item() && let Some(index) = &mut item.expanded_index {
             *index += 1;
-            if *index > 2 {
+            if *index > DROPDOWN_ITEM_NAMES.len() {
                 item.expanded_index = None;
             } else {
                 return;
