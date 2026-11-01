@@ -125,10 +125,6 @@ impl Anthilus {
     }
 
     fn select(&mut self) {
-        if let Some(item) = self.get_hovered_pane().hovered_item() && let Some(index) = item.expanded_index {
-            
-            return;
-        }
         let path = self.get_hovered_pane().hovered_item_path();
         log(format!("path is {path:?}"));
         if path.is_dir() {
@@ -137,7 +133,9 @@ impl Anthilus {
             log("changing dir");
         } else if let Some(item) = self.get_hovered_pane().hovered_item() {
             log("expanding");
-            item.toggle_expand();
+            if item.select() {
+                self.get_hovered_pane().populate();
+            }
         }
     }
 
