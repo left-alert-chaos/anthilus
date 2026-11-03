@@ -115,10 +115,6 @@ impl Default for RenderContext {
 
 /// Get the line length after removing ANSI codes
 pub fn line_length(mut line: String) -> usize {
-    let log_py = if line.as_str().contains(" directory_generator.py") {
-        crate::log(format!("line_length(): line is {line:?} and has directory_generator.py!"));
-        true
-    } else { false };
     if line.starts_with("\x1b") {
         loop {
             // spaces are used to indent items, so they can be used as a marker of the end of an
@@ -136,14 +132,5 @@ pub fn line_length(mut line: String) -> usize {
 
     while line.contains('\x1b') { line.pop(); }
 
-    if log_py {
-        if line.len() != 23 {
-
-        crate::log(format!("line_length(): length is {}, but the line contains directory_generator.py!", line.len()));
-        } else {
-
-        crate::log(format!("line_length(): length is 23!"));
-        }
-    }
     line.len()
 }
