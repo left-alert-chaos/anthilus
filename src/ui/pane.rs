@@ -74,7 +74,7 @@ impl Pane {
             }
         }
 
-        if should_set_index && !self.items.is_empty() {
+        if should_set_index && !self.items.is_empty() && self.hovered_item_index >= self.items.len() {
             self.hovered_item_index = 0;
             self.first_row = 0;
         }
