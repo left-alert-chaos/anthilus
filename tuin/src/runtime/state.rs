@@ -31,16 +31,22 @@ where
     /// to `update()`. This can be used to run logic roughly every few seconds, but the callback is
     /// only run once a key has been pressed.
     fn event_loop(&mut self, callback: Option<fn(&mut RuntimeInfo) -> Option<T>>) {
-        raw_mode();
+        log("State<T>::event_loop(): Starting event loop");
 
+        raw_mode();
         let mut info = RuntimeInfo::new();
         input::set_stdin_nonblocking();
 
+        let loop_start = Instant::now();
+
         loop {
+            info.frame += 1;
+
             // clear the screen
             print!("\x1b[H\x1b[2J\x1b[3J");
 
             // build, render and draw the UI
+            let render_start = Instant::now();
             let context = RenderContext::default();
             let rendered: String = match self.build() {
                 Some(widget) => widget.render(context).into(),
@@ -48,6 +54,10 @@ where
             };
             print!("{rendered}");
             let _ = io::stdout().flush();
+            if info.frame() % 1000 == 0 {
+                log(format!("State<T>::event_loop(): Built, rendered, and drew in {:?}", render_start.elapsed()));
+                log(format!("State<T>::event_loop(): It's been {:?} since loop_start and it's frame {}, so we're running at {:?} FPS!", loop_start.elapsed(), info.frame(), (info.frame() as f64 + 1.0) / loop_start.elapsed().as_secs_f64()));
+            }
 
             if let Some(function) = &callback
                 && let Some(message) = function(&mut info)
@@ -55,17 +65,17 @@ where
                 self.update(message);
             }
 
-            let input = match Input::get() {
-                Ok(event) => event,
-                Err(_) => continue,
+            let input = loop {
+                if let Ok(event) = Input::get() {
+                    break event;
+                }
             };
 
             let event = T::from(input);
             self.update(event);
-
-            info.frame += 1;
         }
 
+        log("State<T>::event_loop(): Ending event loop");
         exit_raw_mode();
     }
 }
@@ -97,7 +107,7 @@ impl RuntimeInfo {
         self.last_instant = Instant::now();
     }
 
-    /// Get the numbered frame we're currently on. The first frame is 0.
+    /// Get the numbered frame we're currently on. The first frame is 1.
     pub fn frame(&self) -> u64 {
         self.frame
     }
