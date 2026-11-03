@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         logging::print_logs()
     } else {
         let mut state = state::Anthilus::new();
-        state.event_loop(Some(state::check_reload));
+        state.event_loop(None);
         Ok(())
     }
 }

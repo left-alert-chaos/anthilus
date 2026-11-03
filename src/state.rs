@@ -3,12 +3,11 @@ use tuin::*;
 use crate::logging::log;
 use crate::ui::*;
 
-use std::{time::Duration, path::PathBuf};
+use std::path::PathBuf;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Message {
     Input(Input),
-    Reload,
 }
 
 impl From<Input> for Message {
@@ -43,7 +42,6 @@ impl State<Message> for Anthilus {
     fn update(&mut self, event: Message) {
         match event {
             Message::Input(input) => self.update_input(input),
-            Message::Reload => self.get_hovered_pane().populate(),
         }
     }
 }
@@ -126,40 +124,47 @@ impl Anthilus {
 
     fn select(&mut self) {
         let path = self.get_hovered_pane().hovered_item_path();
-        log(format!("path is {path:?}"));
         if path.is_dir() {
             *self.get_hovered_pane().path = path;
             self.get_hovered_pane().populate();
-            log("changing dir");
-        } else if let Some(item) = self.get_hovered_pane().hovered_item() {
-            log("expanding");
-            if item.select() {
-                self.get_hovered_pane().populate();
-            }
+        } else if let Some(item) = self.get_hovered_pane().hovered_item() && let Some(result) = item.select() {
+            self.use_update_result(result);
         }
     }
 
-    fn update_input_typing(&mut self, _input: Input) {}
+    fn update_input_typing(&mut self, input: Input) {
+        if let Some(result) = self.get_hovered_pane().hovered_item().unwrap().input_typing(input) {
+            self.use_update_result(result);
+        }
+    }
 
     fn get_hovered_pane(&mut self) -> &mut Pane {
         &mut self.panes[self.hovered_pane]
+    }
+
+    fn use_update_result(&mut self, result: UpdateItemResult) {
+        match result {
+            UpdateItemResult::Repopulate => self.get_hovered_pane().populate(),
+            UpdateItemResult::SetCursorState(state) => self.cursor_state = state,
+            UpdateItemResult::DoBoth(state) => {
+                self.get_hovered_pane().populate();
+                self.cursor_state = state;
+            }
+        }
     }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 #[allow(dead_code)]
-enum CursorState {
+pub enum CursorState {
     Typing,
     Hovering,
 }
 
-/// Run as a callback every frame
-pub fn check_reload(info: &mut RuntimeInfo) -> Option<Message> {
-    // reload every 5 seconds
-    if info.elapsed() >= Duration::new(5, 0) {
-        info.reset_clock();
-        Some(Message::Reload)
-    } else {
-        None
-    }
+/// What do do when an Item finishes updating
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum UpdateItemResult {
+    Repopulate,
+    SetCursorState(CursorState),
+    DoBoth(CursorState),
 }

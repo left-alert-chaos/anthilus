@@ -1,17 +1,18 @@
 use tuin::*;
 
-use crate::logging::log;
+use crate::{logging::log, state::{UpdateItemResult, CursorState}};
 
 use std::fs;
 
 /// The names of the options shown when an item is expanded
-pub static DROPDOWN_ITEM_NAMES: [&str; 1] = ["Delete"];
+pub static DROPDOWN_ITEM_NAMES: [&str; 2] = ["Delete", "Rename"];
 
 #[derive(Clone, Debug)]
 pub struct Item {
     name: String,
     pub expanded_index: Option<usize>,
     pub hovered: bool,
+    typing_buffer: Option<TypingBuffer>,
 }
 
 impl Item {
@@ -20,11 +21,16 @@ impl Item {
             name: name.into(),
             expanded_index: None,
             hovered: false,
+            typing_buffer: None,
         }
     }
 
     pub fn build(&self, pane_is_hovered: bool) -> Widget {
-        let mut text = self.name.clone();
+        let mut text = if let Some(buffer) = &self.typing_buffer {
+            buffer.buffer.clone()
+        } else {
+            self.name()
+        };
 
         // invert colors if hovered
         if self.hovered && pane_is_hovered {
@@ -55,29 +61,54 @@ impl Item {
     }
 
     /// Returns whether or not to repopulate pane after item performs action
-    pub fn select(&mut self) -> bool {
-        if self.expanded_index.is_some() {
-            if self.expanded_index == Some(0) {
-                self.expanded_index = None;
-                false
-            } else {
-                self.select_dropdown()
+    pub fn select(&mut self) -> Option<UpdateItemResult> {
+        if let Some(index) = self.expanded_index {
+            match index {
+                0 => {
+                    self.expanded_index = None;
+                    None
+                }
+                _ => self.select_dropdown()
             }
         } else {
             self.expanded_index = Some(0);
-            false
+            None
         }
     }
 
-    fn select_dropdown(&mut self) -> bool {
+    /// Process some Input while typing
+    pub fn input_typing(&mut self, input: Input) -> Option<UpdateItemResult> {
+        let Some(buffer) = &mut self.typing_buffer else {
+            return None;
+        };
+
+        let Some(result) = buffer.take_input(input) else {
+            return None;
+        };
+        match result {
+            BufferInputResult::Cancel => {
+                self.typing_buffer = None;
+                None
+            }
+            BufferInputResult::Complete(string) => {
+                if let Err(e) = fs::rename(self.name(), string) {
+                    log(format!("Item::input_typing(): Couldn't rename item {}; generated error {e}", self.name));
+                }
+                Some(UpdateItemResult::DoBoth(CursorState::Hovering))
+            }
+        }
+    }
+
+    fn select_dropdown(&mut self) -> Option<UpdateItemResult> {
         let Some(mut index) = self.expanded_index else {
-            return false;
+            return None;
         };
         index -= 1;
 
         match DROPDOWN_ITEM_NAMES[index] {
-            "Delete" => { self.delete(); true },
-            _ => { log(format!("Item::select_dropdown(): DROPDOWN_ITEM_NAMES[{index}] is {}, which isn't a handled action! Something is seriously wrong!", DROPDOWN_ITEM_NAMES[index])); false },
+            "Delete" => { self.delete(); Some(UpdateItemResult::Repopulate) },
+            "Rename" => { self.start_rename(); Some(UpdateItemResult::SetCursorState(CursorState::Typing)) }
+            _ => { log(format!("Item::select_dropdown(): DROPDOWN_ITEM_NAMES[{index}] is {}, which isn't a handled action! Something is seriously wrong!", DROPDOWN_ITEM_NAMES[index])); None },
         }
     }
 
@@ -86,4 +117,49 @@ impl Item {
             log(format!("Item::delete(): couldn't delete item {}; generated error {e}", self.name));
         }
     }
+
+    fn start_rename(&mut self) {
+        self.typing_buffer = Some(TypingBuffer::new(TypingLocation::Rename));
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum TypingLocation {
+    Rename,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+struct TypingBuffer {
+    buffer: String,
+    cursor: usize,
+    location: TypingLocation,
+}
+
+impl TypingBuffer {
+    fn new(location: TypingLocation) -> Self {
+        Self {
+            buffer: String::new(),
+            cursor: 0,
+            location,
+        }
+    }
+
+    /// Take some input and return whether to use the buffer, cancel operation, or wait
+    fn take_input(&mut self, input: Input) -> Option<BufferInputResult> {
+        match input {
+            Input::Character(c) => self.buffer.push(c),
+            Input::Escape => return Some(BufferInputResult::Cancel),
+            Input::Return => return Some(BufferInputResult::Complete(self.buffer.clone())),
+            _ => {}
+        }
+
+        None
+    }
+}
+
+/// What to do, if anything, after a `TypingBuffer` takes input
+#[derive(Clone, PartialEq, Eq, Debug)]
+enum BufferInputResult {
+    Complete(String),
+    Cancel,
 }
