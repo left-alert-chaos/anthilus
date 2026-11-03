@@ -91,7 +91,10 @@ impl Item {
                 Some(UpdateItemResult::SetCursorState(CursorState::Hovering))
             }
             BufferInputResult::Complete(string) => {
-                if let Err(e) = fs::rename(path, string) {
+                let mut file_parent = path.clone();
+                file_parent.pop();
+                file_parent.push(string);
+                if let Err(e) = fs::rename(path, file_parent) {
                     log(format!("Item::input_typing(): Couldn't rename item {}; generated error {e}", self.name));
                 }
                 Some(UpdateItemResult::DoBoth(CursorState::Hovering))
