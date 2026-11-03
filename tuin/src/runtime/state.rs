@@ -34,6 +34,7 @@ where
         raw_mode();
 
         let mut info = RuntimeInfo::new();
+        input::set_stdin_nonblocking();
 
         loop {
             // clear the screen

@@ -1,11 +1,14 @@
 //! # input
 //! This module holds logic for handling user input and entering/exiting raw mode.
 
+use crate::log;
+
 use std::io::{self, Read};
 
 unsafe extern "C" {
     fn c_enter_raw_mode();
     fn c_exit_raw_mode();
+    fn c_set_stdin_nonblocking();
 }
 
 /// # raw_mode()
@@ -24,6 +27,14 @@ pub fn exit_raw_mode() {
     }
 }
 
+/// # set_stdin_nonblocking()
+/// Make file descriptor 0 not block for reads
+pub fn set_stdin_nonblocking() {
+    unsafe {
+        c_set_stdin_nonblocking();
+    }
+}
+
 /// # Input
 /// One keystroke.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -35,6 +46,7 @@ pub enum Input {
     Left,
     Right,
     Backspace,
+    Escape,
     Character(char),
 }
 
@@ -50,16 +62,20 @@ impl Input {
         Ok(match character {
             '\n' => Self::Return,
             '\t' => Self::Tab,
-            '\x1b' => Self::parse_direction()?,
+            '\x1b' => Self::parse_escape()?,
             '\u{7f}' => Self::Backspace,
             _ => Self::Character(character),
         })
     }
 
-    fn parse_direction() -> io::Result<Self> {
+    fn parse_escape() -> io::Result<Self> {
         let mut stdin = io::stdin();
+
         let mut buffer = [0, 0];
-        stdin.read(&mut buffer)?;
+        if let Err(e) = stdin.read(&mut buffer) {
+            log(format!("Couldn't read next character because {e}. Returning Input::Escape"));
+            return Ok(Self::Escape);
+        }
 
         let sequence = match String::from_utf8(buffer.to_vec()) {
             Ok(seq) => seq,
