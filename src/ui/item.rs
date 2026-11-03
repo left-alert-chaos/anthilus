@@ -2,7 +2,7 @@ use tuin::*;
 
 use crate::{logging::log, state::{UpdateItemResult, CursorState}};
 
-use std::fs;
+use std::{fs, path::PathBuf};
 
 /// The names of the options shown when an item is expanded
 pub static DROPDOWN_ITEM_NAMES: [&str; 2] = ["Delete", "Rename"];
@@ -61,14 +61,14 @@ impl Item {
     }
 
     /// Returns whether or not to repopulate pane after item performs action
-    pub fn select(&mut self) -> Option<UpdateItemResult> {
+    pub fn select(&mut self, path: PathBuf) -> Option<UpdateItemResult> {
         if let Some(index) = self.expanded_index {
             match index {
                 0 => {
                     self.expanded_index = None;
                     None
                 }
-                _ => self.select_dropdown()
+                _ => self.select_dropdown(path)
             }
         } else {
             self.expanded_index = Some(0);
@@ -77,7 +77,7 @@ impl Item {
     }
 
     /// Process some Input while typing
-    pub fn input_typing(&mut self, input: Input) -> Option<UpdateItemResult> {
+    pub fn input_typing(&mut self, input: Input, path: PathBuf) -> Option<UpdateItemResult> {
         let Some(buffer) = &mut self.typing_buffer else {
             return None;
         };
@@ -88,10 +88,10 @@ impl Item {
         match result {
             BufferInputResult::Cancel => {
                 self.typing_buffer = None;
-                None
+                Some(UpdateItemResult::SetCursorState(CursorState::Hovering))
             }
             BufferInputResult::Complete(string) => {
-                if let Err(e) = fs::rename(self.name(), string) {
+                if let Err(e) = fs::rename(path, string) {
                     log(format!("Item::input_typing(): Couldn't rename item {}; generated error {e}", self.name));
                 }
                 Some(UpdateItemResult::DoBoth(CursorState::Hovering))
@@ -99,21 +99,21 @@ impl Item {
         }
     }
 
-    fn select_dropdown(&mut self) -> Option<UpdateItemResult> {
+    fn select_dropdown(&mut self, path: PathBuf) -> Option<UpdateItemResult> {
         let Some(mut index) = self.expanded_index else {
             return None;
         };
         index -= 1;
 
         match DROPDOWN_ITEM_NAMES[index] {
-            "Delete" => { self.delete(); Some(UpdateItemResult::Repopulate) },
+            "Delete" => { self.delete(path); Some(UpdateItemResult::Repopulate) },
             "Rename" => { self.start_rename(); Some(UpdateItemResult::SetCursorState(CursorState::Typing)) }
             _ => { log(format!("Item::select_dropdown(): DROPDOWN_ITEM_NAMES[{index}] is {}, which isn't a handled action! Something is seriously wrong!", DROPDOWN_ITEM_NAMES[index])); None },
         }
     }
 
-    fn delete(&mut self) {
-        if let Err(e) = fs::remove_file(self.name.clone()) {
+    fn delete(&mut self, path: PathBuf) {
+        if let Err(e) = fs::remove_file(path) {
             log(format!("Item::delete(): couldn't delete item {}; generated error {e}", self.name));
         }
     }
@@ -150,6 +150,7 @@ impl TypingBuffer {
             Input::Character(c) => self.buffer.push(c),
             Input::Escape => return Some(BufferInputResult::Cancel),
             Input::Return => return Some(BufferInputResult::Complete(self.buffer.clone())),
+            Input::Backspace => { self.buffer.pop(); }
             _ => {}
         }
 

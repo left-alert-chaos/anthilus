@@ -124,16 +124,19 @@ impl Anthilus {
 
     fn select(&mut self) {
         let path = self.get_hovered_pane().hovered_item_path();
+        let item_path = self.get_hovered_pane().hovered_item_path();
+
         if path.is_dir() {
             *self.get_hovered_pane().path = path;
             self.get_hovered_pane().populate();
-        } else if let Some(item) = self.get_hovered_pane().hovered_item() && let Some(result) = item.select() {
+        } else if let Some(item) = self.get_hovered_pane().hovered_item() && let Some(result) = item.select(item_path) {
             self.use_update_result(result);
         }
     }
 
     fn update_input_typing(&mut self, input: Input) {
-        if let Some(result) = self.get_hovered_pane().hovered_item().unwrap().input_typing(input) {
+        let item_path = self.get_hovered_pane().hovered_item_path();
+        if let Some(result) = self.get_hovered_pane().hovered_item().unwrap().input_typing(input, item_path) {
             self.use_update_result(result);
         }
     }
