@@ -9,7 +9,7 @@ use std::{fs::read_dir, path::PathBuf};
 #[derive(Clone, Debug)]
 pub struct Pane {
     pub path: Box<PathBuf>,
-    items: Vec<Item>,
+    pub items: Vec<Item>,
     hovered_item_index: usize,
     pub hovered: bool,
     pub first_row: usize,

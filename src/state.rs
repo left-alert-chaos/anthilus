@@ -92,6 +92,7 @@ impl Anthilus {
             }
             Input::Character('r') => self.get_hovered_pane().populate(),
             Input::Return => self.select(),
+            Input::Character('n') => self.new_file(),
             Input::Character('p') => self.new_pane(),
             Input::Backspace => self.up(),
             _ => log(format!("recieved unused input {input:?}")),
@@ -154,6 +155,26 @@ impl Anthilus {
                 self.cursor_state = state;
             }
         }
+    }
+    
+    fn new_file(&mut self) {
+        let mut file_number = 0;
+        let mut file_name = String::from("file0");
+
+        // this has probably been properly styled by now but it was one hell of a one-liner when I
+        // wrote it
+        while !self.get_hovered_pane().items.iter().filter(|i| i.name() == file_name).collect::<Vec<_>>().is_empty() {
+            file_number += 1;
+            file_name = format!("file{file_number}");
+        }
+
+        let mut path = self.get_hovered_pane().path.clone();
+        path.push(&file_name);
+        if let Err(e) = std::fs::write(*path, "") {
+            log(format!("Anthilus::new_file(): Couldn't write to {file_name} because {e}"));
+        }
+
+        self.get_hovered_pane().populate();
     }
 }
 
