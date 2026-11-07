@@ -1,6 +1,6 @@
 use tuin::*;
 
-use crate::{logging::log, state::{UpdateItemResult, CursorState}};
+use crate::{logging::log, state::{UpdateItemResult, CursorState, TypingBuffer, BufferInputResult, TypingLocation}};
 
 use std::{fs, path::PathBuf};
 
@@ -27,7 +27,7 @@ impl Item {
 
     pub fn build(&self, pane_is_hovered: bool) -> Widget {
         let mut text = if let Some(buffer) = &self.typing_buffer {
-            buffer.buffer.clone()
+            buffer.buffer()
         } else {
             self.name()
         };
@@ -85,11 +85,9 @@ impl Item {
         let Some(result) = buffer.take_input(input) else {
             return None;
         };
+        self.typing_buffer = None;
         match result {
-            BufferInputResult::Cancel => {
-                self.typing_buffer = None;
-                Some(UpdateItemResult::SetCursorState(CursorState::Hovering))
-            }
+            BufferInputResult::Cancel => Some(UpdateItemResult::SetCursorState(CursorState::Hovering)),
             BufferInputResult::Complete(string) => {
                 let mut file_parent = path.clone();
                 file_parent.pop();
@@ -126,44 +124,3 @@ impl Item {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-enum TypingLocation {
-    Rename,
-}
-
-#[derive(Clone, PartialEq, Eq, Debug)]
-struct TypingBuffer {
-    buffer: String,
-    cursor: usize,
-    location: TypingLocation,
-}
-
-impl TypingBuffer {
-    fn new(location: TypingLocation) -> Self {
-        Self {
-            buffer: String::new(),
-            cursor: 0,
-            location,
-        }
-    }
-
-    /// Take some input and return whether to use the buffer, cancel operation, or wait
-    fn take_input(&mut self, input: Input) -> Option<BufferInputResult> {
-        match input {
-            Input::Character(c) => self.buffer.push(c),
-            Input::Escape => return Some(BufferInputResult::Cancel),
-            Input::Return => return Some(BufferInputResult::Complete(self.buffer.clone())),
-            Input::Backspace => { self.buffer.pop(); }
-            _ => {}
-        }
-
-        None
-    }
-}
-
-/// What to do, if anything, after a `TypingBuffer` takes input
-#[derive(Clone, PartialEq, Eq, Debug)]
-enum BufferInputResult {
-    Complete(String),
-    Cancel,
-}

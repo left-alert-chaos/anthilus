@@ -1,7 +1,7 @@
 use tuin::*;
 
 use super::item::Item;
-use crate::{ui::DROPDOWN_ITEM_NAMES, logging::log};
+use crate::{ui::DROPDOWN_ITEM_NAMES, logging::log, state::*};
 
 use std::{fs::read_dir, path::PathBuf};
 
@@ -13,6 +13,7 @@ pub struct Pane {
     hovered_item_index: usize,
     pub hovered: bool,
     pub first_row: usize,
+    pub typing_buffer: Option<TypingBuffer>,
 }
 
 impl Pane {
@@ -24,6 +25,7 @@ impl Pane {
             hovered_item_index: 0,
             hovered: true,
             first_row: 0,
+            typing_buffer: None,
         };
         new.populate();
         new
@@ -32,7 +34,7 @@ impl Pane {
     /// Build a column of widgets to represent this Pane.
     pub fn build(&self) -> Widget {
         let mut column = col![
-            Widget::Label(format_path(*self.path.clone())),
+            Widget::Label(self.title()),
             Widget::Pad
         ];
 
@@ -140,6 +142,28 @@ impl Pane {
             Some(&mut self.items[self.hovered_item_index])
         } else {
             None
+        }
+    }
+
+    pub fn update_typing(&mut self, input: Input) -> Option<UpdateItemResult> {
+        if let Some(buffer) = &mut self.typing_buffer {
+            let Some(result) = buffer.take_input(input) else { return None; };
+            self.typing_buffer = None;
+            match result {
+                BufferInputResult::Cancel => Some(UpdateItemResult::SetCursorState(CursorState::Hovering)),
+                BufferInputResult::Complete(text) => { *self.path = PathBuf::from(text); Some(UpdateItemResult::DoBoth(CursorState::Hovering)) }
+            }
+        } else {
+            let path = self.hovered_item_path();
+            self.hovered_item().unwrap().input_typing(input, path)
+        }
+    }
+
+    fn title(&self) -> String {
+        if let Some(buffer) = &self.typing_buffer {
+            buffer.buffer()
+        } else {
+            format_path(*self.path.clone())
         }
     }
 }

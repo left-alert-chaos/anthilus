@@ -95,6 +95,7 @@ impl Anthilus {
             Input::Character('n') => self.new_file(),
             Input::Character('p') => self.new_pane(),
             Input::Backspace => self.up(),
+            Input::Character('g') => self.goto(),
             _ => log(format!("recieved unused input {input:?}")),
         }
     }
@@ -136,8 +137,7 @@ impl Anthilus {
     }
 
     fn update_input_typing(&mut self, input: Input) {
-        let item_path = self.get_hovered_pane().hovered_item_path();
-        if let Some(result) = self.get_hovered_pane().hovered_item().unwrap().input_typing(input, item_path) {
+        if let Some(result) = self.get_hovered_pane().update_typing(input) {
             self.use_update_result(result);
         }
     }
@@ -176,6 +176,12 @@ impl Anthilus {
 
         self.get_hovered_pane().populate();
     }
+
+    fn goto(&mut self) {
+        let pane = self.get_hovered_pane();
+        pane.typing_buffer = Some(TypingBuffer::new(TypingLocation::Goto));
+        self.cursor_state = CursorState::Typing;
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -191,4 +197,51 @@ pub enum UpdateItemResult {
     Repopulate,
     SetCursorState(CursorState),
     DoBoth(CursorState),
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum TypingLocation {
+    Rename,
+    Goto,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct TypingBuffer {
+    buffer: String,
+    cursor: usize,
+    location: TypingLocation,
+}
+
+impl TypingBuffer {
+    pub fn new(location: TypingLocation) -> Self {
+        Self {
+            buffer: String::new(),
+            cursor: 0,
+            location,
+        }
+    }
+
+    /// Take some input and return whether to use the buffer, cancel operation, or wait
+    pub fn take_input(&mut self, input: Input) -> Option<BufferInputResult> {
+        match input {
+            Input::Character(c) => self.buffer.push(c),
+            Input::Escape => return Some(BufferInputResult::Cancel),
+            Input::Return => return Some(BufferInputResult::Complete(self.buffer.clone())),
+            Input::Backspace => { self.buffer.pop(); }
+            _ => {}
+        }
+
+        None
+    }
+
+    pub fn buffer(&self) -> String {
+        self.buffer.clone()
+    }
+}
+
+/// What to do, if anything, after a `TypingBuffer` takes input
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum BufferInputResult {
+    Complete(String),
+    Cancel,
 }
