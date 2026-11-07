@@ -1,6 +1,8 @@
 //! # helpers
 //! This module holds some helpers to aid in creating widgets.
 
+use crate::Widget;
+
 #[macro_export]
 macro_rules! col {
     ( $( $x:expr ),* ) => {
@@ -25,4 +27,10 @@ macro_rules! row {
             compositor
         }
     }
+}
+
+/// Create a new `Center` widget
+/// A very small function.
+pub fn center(child: Widget) -> Widget {
+    Widget::Center(Box::new(child))
 }

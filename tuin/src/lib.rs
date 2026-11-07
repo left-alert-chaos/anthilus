@@ -1,4 +1,4 @@
-mod helpers;
+pub mod helpers;
 pub mod render;
 pub mod runtime;
 pub mod size;
@@ -6,6 +6,7 @@ pub mod widget;
 pub mod username;
 pub mod logging;
 
+pub use helpers::*;
 pub use render::*;
 pub use runtime::*;
 pub use widget::*;

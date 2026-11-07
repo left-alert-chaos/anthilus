@@ -22,6 +22,10 @@ pub enum Widget {
 
     /// A widget that displays nothing, used as padding between other widgets in a column.
     Pad,
+
+    /// A widget that holds one child and centers it based on maximum width. Center-justifies all
+    /// lines of child.
+    Center(Box<Self>),
 }
 
 impl Widget {
@@ -44,6 +48,22 @@ impl Widget {
             Self::Pad => {
                 Render::new(String::new(), context)
             }
+            Self::Center(child) => child.render_center(context),
         }
+    }
+
+    fn render_center(&self, context: RenderContext) -> Render {
+        let mut render = self.render(context);
+        let Some(max_width) = context.max_width else { return render; };
+
+        let mut gutter = String::new();
+
+        for line in render.lines() {
+            let diff = (max_width - line_length(line.clone()) as u32) / 2;
+            for _ in 0..diff { gutter.push(' '); }
+            line.insert_str(0, gutter.as_str());
+        }
+
+        render
     }
 }

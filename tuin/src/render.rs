@@ -46,6 +46,11 @@ impl Render {
     pub fn height(&self) -> u32 {
         self.lines.len() as u32
     }
+
+    /// Get the lines of a `Render`.
+    pub fn lines(&mut self) -> &mut Vec<String> {
+        &mut self.lines
+    }
 }
 
 impl From<Render> for String {
