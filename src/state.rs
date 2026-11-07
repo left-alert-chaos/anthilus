@@ -192,3 +192,49 @@ pub enum UpdateItemResult {
     SetCursorState(CursorState),
     DoBoth(CursorState),
 }
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum TypingLocation {
+    Rename,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct TypingBuffer {
+    buffer: String,
+    cursor: usize,
+    location: TypingLocation,
+}
+
+impl TypingBuffer {
+    pub fn new(location: TypingLocation) -> Self {
+        Self {
+            buffer: String::new(),
+            cursor: 0,
+            location,
+        }
+    }
+
+    /// Take some input and return whether to use the buffer, cancel operation, or wait
+    pub fn take_input(&mut self, input: Input) -> Option<BufferInputResult> {
+        match input {
+            Input::Character(c) => self.buffer.push(c),
+            Input::Escape => return Some(BufferInputResult::Cancel),
+            Input::Return => return Some(BufferInputResult::Complete(self.buffer.clone())),
+            Input::Backspace => { self.buffer.pop(); }
+            _ => {}
+        }
+
+        None
+    }
+
+    pub fn buffer(&self) -> String {
+        self.buffer.clone()
+    }
+}
+
+/// What to do, if anything, after a `TypingBuffer` takes input
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum BufferInputResult {
+    Complete(String),
+    Cancel,
+}
