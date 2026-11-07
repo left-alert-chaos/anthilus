@@ -85,11 +85,9 @@ impl Item {
         let Some(result) = buffer.take_input(input) else {
             return None;
         };
+        self.typing_buffer = None;
         match result {
-            BufferInputResult::Cancel => {
-                self.typing_buffer = None;
-                Some(UpdateItemResult::SetCursorState(CursorState::Hovering))
-            }
+            BufferInputResult::Cancel => Some(UpdateItemResult::SetCursorState(CursorState::Hovering)),
             BufferInputResult::Complete(string) => {
                 let mut file_parent = path.clone();
                 file_parent.pop();

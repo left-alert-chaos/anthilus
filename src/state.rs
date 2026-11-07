@@ -95,6 +95,7 @@ impl Anthilus {
             Input::Character('n') => self.new_file(),
             Input::Character('p') => self.new_pane(),
             Input::Backspace => self.up(),
+            Input::Character('g') => self.goto(),
             _ => log(format!("recieved unused input {input:?}")),
         }
     }
@@ -136,8 +137,7 @@ impl Anthilus {
     }
 
     fn update_input_typing(&mut self, input: Input) {
-        let item_path = self.get_hovered_pane().hovered_item_path();
-        if let Some(result) = self.get_hovered_pane().hovered_item().unwrap().input_typing(input, item_path) {
+        if let Some(result) = self.get_hovered_pane().update_typing(input) {
             self.use_update_result(result);
         }
     }
@@ -176,6 +176,12 @@ impl Anthilus {
 
         self.get_hovered_pane().populate();
     }
+
+    fn goto(&mut self) {
+        let pane = self.get_hovered_pane();
+        pane.typing_buffer = Some(TypingBuffer::new(TypingLocation::Goto));
+        self.cursor_state = CursorState::Typing;
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -196,6 +202,7 @@ pub enum UpdateItemResult {
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum TypingLocation {
     Rename,
+    Goto,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
