@@ -163,7 +163,10 @@ impl Pane {
         if let Some(buffer) = &self.typing_buffer {
             buffer.buffer()
         } else {
-            format_path(*self.path.clone())
+            //format_path(*self.path.clone())
+            let mut path = self.path.clone().into_string().unwrap_or("[couldn't get path]".to_string()).replace("/", "/\n");
+            path.remove(1);
+            path
         }
     }
 }
