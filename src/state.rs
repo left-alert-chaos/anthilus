@@ -3,7 +3,7 @@ use tuin::*;
 use crate::logging::log;
 use crate::ui::*;
 
-use std::path::PathBuf;
+use std::{path::PathBuf, env::current_dir};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Message {
@@ -49,7 +49,7 @@ impl State<Message> for Anthilus {
 impl Anthilus {
     pub fn new() -> Self {
         Self {
-            panes: vec![Pane::new(".")],
+            panes: vec![Pane::new(current_dir().unwrap())],
             hovered_pane: 0,
             quit: false,
             cursor_state: CursorState::Hovering,
