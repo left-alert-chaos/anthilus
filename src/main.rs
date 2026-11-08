@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         logging::print_logs()
     } else {
         let mut state = state::Anthilus::new();
-        state.event_loop(None);
+        state.event_loop(Some(state::repopulate_check));
         Ok(())
     }
 }

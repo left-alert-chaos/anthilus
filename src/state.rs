@@ -8,6 +8,7 @@ use std::{env::current_dir, path::PathBuf};
 #[derive(Clone, Copy, Debug)]
 pub enum Message {
     Input(Input),
+    Repopulate,
 }
 
 impl From<Input> for Message {
@@ -18,7 +19,7 @@ impl From<Input> for Message {
 
 impl Event for Message {}
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Anthilus {
     panes: Vec<Pane>,
     hovered_pane: usize,
@@ -42,6 +43,11 @@ impl State<Message> for Anthilus {
     fn update(&mut self, event: Message) {
         match event {
             Message::Input(input) => self.update_input(input),
+            Message::Repopulate => {
+                for pane in self.panes.iter_mut() {
+                    pane.populate();
+                }
+            }
         }
     }
 }
@@ -96,12 +102,15 @@ impl Anthilus {
             Input::Character('p') => self.new_pane(),
             Input::Backspace => self.up(),
             Input::Character('g') => self.goto(),
+            Input::Character('f') => self.search(),
+            Input::Escape => { self.get_hovered_pane().stop_searching(); self.get_hovered_pane().populate(); }
             _ => log(format!("recieved unused input {input:?}")),
         }
     }
 
     fn up(&mut self) {
         if *self.get_hovered_pane().path != PathBuf::from(".") {
+            self.get_hovered_pane().stop_searching();
             self.get_hovered_pane().path.pop();
         } else {
             if let Ok(path) = std::path::absolute(*self.get_hovered_pane().path.clone()) {
@@ -193,6 +202,12 @@ impl Anthilus {
         pane.typing_buffer = Some(TypingBuffer::new(TypingLocation::Goto));
         self.cursor_state = CursorState::Typing;
     }
+
+    fn search(&mut self) {
+        let pane = self.get_hovered_pane();
+        pane.typing_buffer = Some(TypingBuffer::new(TypingLocation::Search));
+        self.cursor_state = CursorState::Typing;
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -214,6 +229,7 @@ pub enum UpdateItemResult {
 pub enum TypingLocation {
     Rename,
     Goto,
+    Search,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -250,6 +266,10 @@ impl TypingBuffer {
     pub fn buffer(&self) -> String {
         self.buffer.clone()
     }
+
+    pub fn location(&self) -> TypingLocation {
+        self.location
+    }
 }
 
 /// What to do, if anything, after a `TypingBuffer` takes input
@@ -257,4 +277,14 @@ impl TypingBuffer {
 pub enum BufferInputResult {
     Complete(String),
     Cancel,
+}
+
+pub fn repopulate_check(info: &mut RuntimeInfo) -> Option<Message> {
+    if info.elapsed().as_secs_f64() > 0.25 {
+        info.reset_clock();
+        log("state::repopulate_check(): Returning Some(Message::Repopulate)");
+        Some(Message::Repopulate)
+    } else {
+        None
+    }
 }

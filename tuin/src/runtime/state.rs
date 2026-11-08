@@ -54,21 +54,23 @@ where
             };
             print!("{rendered}");
             let _ = io::stdout().flush();
+
+            // log frames per second
             if info.frame() % 1000 == 0 {
                 log(format!("State<T>::event_loop(): Built, rendered, and drew in {:?}", render_start.elapsed()));
                 log(format!("State<T>::event_loop(): It's been {:?} since loop_start and it's frame {}, so we're running at {:?} FPS!", loop_start.elapsed(), info.frame(), (info.frame() as f64 + 1.0) / loop_start.elapsed().as_secs_f64()));
             }
 
-            if let Some(function) = &callback
-                && let Some(message) = function(&mut info)
-            {
-                self.update(message);
-            }
-
-            let input = loop {
+            let input = match loop {
                 if let Ok(event) = Input::get() {
-                    break event;
+                    break Some(event);
+                } else if let Some(callback) = callback && let Some(event) = callback(&mut info) {
+                    self.update(event);
+                    break None;
                 }
+            } {
+                Some(event) => event,
+                None => continue,
             };
 
             let event = T::from(input);

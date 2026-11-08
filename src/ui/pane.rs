@@ -3,10 +3,10 @@ use tuin::*;
 use super::item::Item;
 use crate::{logging::log, state::*, ui::DROPDOWN_ITEM_NAMES};
 
-use std::{fs::read_dir, path::PathBuf};
+use std::{fs::{read_dir, metadata}, path::PathBuf, sync::mpsc::{channel, Receiver, Sender}, thread::spawn};
 
 /// One pane in the UI
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Pane {
     pub path: Box<PathBuf>,
     pub items: Vec<Item>,
@@ -14,6 +14,7 @@ pub struct Pane {
     pub hovered: bool,
     pub first_row: usize,
     pub typing_buffer: Option<TypingBuffer>,
+    search_receiver: Option<Receiver<Item>>,
 }
 
 impl Pane {
@@ -26,6 +27,7 @@ impl Pane {
             hovered: true,
             first_row: 0,
             typing_buffer: None,
+            search_receiver: None,
         };
         new.populate();
         new
@@ -55,6 +57,21 @@ impl Pane {
             String::from("[unknown file name]")
         };
 
+        // skip clearing items if currently receiving search results
+        if let Some(receiver) = &mut self.search_receiver {
+            let hover_first = self.items.is_empty();
+            while let Ok(item) = receiver.try_recv() {
+                self.items.push(item);
+            }
+
+            if hover_first && !self.items.is_empty() {
+                self.hovered_item_index = 0;
+                self.items[0].hovered = true;
+            }
+
+            return;
+        }
+
         self.items.clear();
 
         let Ok(files) = read_dir(*self.path.clone()) else {
@@ -66,7 +83,7 @@ impl Pane {
         for file in files {
             if let Ok(entry) = file {
                 let name = format_path(entry.path());
-                self.items.push(super::Item::new(&name));
+                self.items.push(Item::new(&name));
 
                 if name == hovered_name {
                     self.hovered_item_index = self.items.len() - 1;
@@ -158,14 +175,13 @@ impl Pane {
             let Some(result) = buffer.take_input(input) else {
                 return None;
             };
-            self.typing_buffer = None;
             match result {
                 BufferInputResult::Cancel => {
+                    self.typing_buffer = None;
                     Some(UpdateItemResult::SetCursorState(CursorState::Hovering))
                 }
                 BufferInputResult::Complete(text) => {
-                    *self.path = PathBuf::from(text);
-                    Some(UpdateItemResult::DoBoth(CursorState::Hovering))
+                    self.finish_buffer(text)
                 }
             }
         } else {
@@ -174,20 +190,84 @@ impl Pane {
         }
     }
 
+    pub fn stop_searching(&mut self) {
+        self.typing_buffer = None;
+        self.search_receiver = None;
+    }
+
+    fn finish_buffer(&mut self, text: String) -> Option<UpdateItemResult> {
+        let Some(buffer) = &mut self.typing_buffer else { unreachable!(); };
+
+        match buffer.location() {
+            TypingLocation::Goto => {
+                *self.path = PathBuf::from(text);
+                self.typing_buffer = None;
+                Some(UpdateItemResult::DoBoth(CursorState::Hovering))
+            }
+            // start a file search in a background thread
+            TypingLocation::Search => {
+                let (sender, receiver) = channel();
+                let path = *self.path.clone();
+                self.items.clear();
+                spawn(|| search(sender, path, text, true));
+
+                self.search_receiver = Some(receiver);
+                self.typing_buffer = None;
+                Some(UpdateItemResult::DoBoth(CursorState::Hovering))
+            }
+            _ => unreachable!()
+        }
+    }
+
     fn title(&self) -> String {
         if let Some(buffer) = &self.typing_buffer {
-            buffer.buffer()
+            if buffer.location() == TypingLocation::Goto {
+                buffer.buffer()
+            } else {
+                format!("{}\n\n{}", self.display_path(), buffer.buffer())
+            }
         } else {
-            //format_path(*self.path.clone())
-            let mut path = self
-                .path
-                .clone()
-                .into_string()
-                .unwrap_or("[couldn't get path]".to_string())
-                .replace("/", "/\n");
-            path.remove(1);
-            path
+            self.display_path()
         }
+    }
+
+    fn display_path(&self) -> String {
+        let mut path = self
+            .path
+            .clone()
+            .into_string()
+            .unwrap_or("[couldn't get path]".to_string())
+            .replace("/", "/\n");
+        path.remove(1);
+        path
+    }
+}
+
+// the background thread that searches for files
+fn search(sender: Sender<Item>, dir: PathBuf, pattern: String, is_parent: bool) {
+    let Ok(files) = read_dir(dir.clone()) else { return; };
+
+    for file in files {
+        let Ok(file) = file else { continue; };
+
+        let name = file.path().into_string().unwrap_or("[couldn't read name]".to_string()).to_string();
+        let last_segment = format_path(file.path());
+        if last_segment.contains(&pattern) {
+            log(format!("ui::pane::search(): Found file {name}"));
+            if let Err(e) = sender.send(Item::new(name)) {
+                log(format!("ui::pane::search(): Couldn't send item because {e}"));
+            }
+        }
+
+        if let Ok(metadata) = metadata(file.path()) && metadata.file_type().is_dir() {
+            let mut dir = dir.clone();
+            dir.push(last_segment);
+            search(sender.clone(), dir, pattern.clone(), false);
+        }
+    }
+
+    if is_parent {
+        log("ui::pane::search(): Finished search")
     }
 }
 
