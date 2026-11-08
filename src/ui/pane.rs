@@ -3,7 +3,12 @@ use tuin::*;
 use super::item::Item;
 use crate::{logging::log, state::*, ui::DROPDOWN_ITEM_NAMES};
 
-use std::{fs::{read_dir, metadata}, path::PathBuf, sync::mpsc::{channel, Receiver, Sender}, thread::spawn};
+use std::{
+    fs::{metadata, read_dir},
+    path::PathBuf,
+    sync::mpsc::{Receiver, Sender, channel},
+    thread::spawn,
+};
 
 /// One pane in the UI
 #[derive(Debug)]
@@ -180,9 +185,7 @@ impl Pane {
                     self.typing_buffer = None;
                     Some(UpdateItemResult::SetCursorState(CursorState::Hovering))
                 }
-                BufferInputResult::Complete(text) => {
-                    self.finish_buffer(text)
-                }
+                BufferInputResult::Complete(text) => self.finish_buffer(text),
             }
         } else {
             let path = self.hovered_item_path();
@@ -196,7 +199,9 @@ impl Pane {
     }
 
     fn finish_buffer(&mut self, text: String) -> Option<UpdateItemResult> {
-        let Some(buffer) = &mut self.typing_buffer else { unreachable!(); };
+        let Some(buffer) = &mut self.typing_buffer else {
+            unreachable!();
+        };
 
         match buffer.location() {
             TypingLocation::Goto => {
@@ -215,7 +220,7 @@ impl Pane {
                 self.typing_buffer = None;
                 Some(UpdateItemResult::DoBoth(CursorState::Hovering))
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
@@ -245,21 +250,33 @@ impl Pane {
 
 // the background thread that searches for files
 fn search(sender: Sender<Item>, dir: PathBuf, pattern: String, is_parent: bool) {
-    let Ok(files) = read_dir(dir.clone()) else { return; };
+    let Ok(files) = read_dir(dir.clone()) else {
+        return;
+    };
 
     for file in files {
-        let Ok(file) = file else { continue; };
+        let Ok(file) = file else {
+            continue;
+        };
 
-        let name = file.path().into_string().unwrap_or("[couldn't read name]".to_string()).to_string();
+        let name = file
+            .path()
+            .into_string()
+            .unwrap_or("[couldn't read name]".to_string())
+            .to_string();
         let last_segment = format_path(file.path());
         if last_segment.contains(&pattern) {
             log(format!("ui::pane::search(): Found file {name}"));
             if let Err(e) = sender.send(Item::new(name)) {
-                log(format!("ui::pane::search(): Couldn't send item because {e}"));
+                log(format!(
+                    "ui::pane::search(): Couldn't send item because {e}"
+                ));
             }
         }
 
-        if let Ok(metadata) = metadata(file.path()) && metadata.file_type().is_dir() {
+        if let Ok(metadata) = metadata(file.path())
+            && metadata.file_type().is_dir()
+        {
             let mut dir = dir.clone();
             dir.push(last_segment);
             search(sender.clone(), dir, pattern.clone(), false);

@@ -103,7 +103,10 @@ impl Anthilus {
             Input::Backspace => self.up(),
             Input::Character('g') => self.goto(),
             Input::Character('f') => self.search(),
-            Input::Escape => { self.get_hovered_pane().stop_searching(); self.get_hovered_pane().populate(); }
+            Input::Escape => {
+                self.get_hovered_pane().stop_searching();
+                self.get_hovered_pane().populate();
+            }
             _ => log(format!("recieved unused input {input:?}")),
         }
     }
