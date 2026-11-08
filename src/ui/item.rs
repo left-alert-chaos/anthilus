@@ -1,6 +1,9 @@
 use tuin::*;
 
-use crate::{logging::log, state::{UpdateItemResult, CursorState, TypingBuffer, BufferInputResult, TypingLocation}};
+use crate::{
+    logging::log,
+    state::{BufferInputResult, CursorState, TypingBuffer, TypingLocation, UpdateItemResult},
+};
 
 use std::{fs, path::PathBuf};
 
@@ -47,7 +50,9 @@ impl Item {
                 main.add_child(Widget::Label(format!("  {name}")));
             }
 
-            if let Some(Widget::Label(string)) = main.child(index) && index != 0 {
+            if let Some(Widget::Label(string)) = main.child(index)
+                && index != 0
+            {
                 string.insert_str(0, "\x1b[1;31m ");
                 string.push_str("\x1b[0m");
             }
@@ -68,7 +73,7 @@ impl Item {
                     self.expanded_index = None;
                     None
                 }
-                _ => self.select_dropdown(path)
+                _ => self.select_dropdown(path),
             }
         } else {
             self.expanded_index = Some(0);
@@ -87,13 +92,18 @@ impl Item {
         };
         self.typing_buffer = None;
         match result {
-            BufferInputResult::Cancel => Some(UpdateItemResult::SetCursorState(CursorState::Hovering)),
+            BufferInputResult::Cancel => {
+                Some(UpdateItemResult::SetCursorState(CursorState::Hovering))
+            }
             BufferInputResult::Complete(string) => {
                 let mut file_parent = path.clone();
                 file_parent.pop();
                 file_parent.push(string);
                 if let Err(e) = fs::rename(path, file_parent) {
-                    log(format!("Item::input_typing(): Couldn't rename item {}; generated error {e}", self.name));
+                    log(format!(
+                        "Item::input_typing(): Couldn't rename item {}; generated error {e}",
+                        self.name
+                    ));
                 }
                 Some(UpdateItemResult::DoBoth(CursorState::Hovering))
             }
@@ -107,15 +117,30 @@ impl Item {
         index -= 1;
 
         match DROPDOWN_ITEM_NAMES[index] {
-            "Delete" => { self.delete(path); Some(UpdateItemResult::Repopulate) },
-            "Rename" => { self.start_rename(); Some(UpdateItemResult::SetCursorState(CursorState::Typing)) }
-            _ => { log(format!("Item::select_dropdown(): DROPDOWN_ITEM_NAMES[{index}] is {}, which isn't a handled action! Something is seriously wrong!", DROPDOWN_ITEM_NAMES[index])); None },
+            "Delete" => {
+                self.delete(path);
+                Some(UpdateItemResult::Repopulate)
+            }
+            "Rename" => {
+                self.start_rename();
+                Some(UpdateItemResult::SetCursorState(CursorState::Typing))
+            }
+            _ => {
+                log(format!(
+                    "Item::select_dropdown(): DROPDOWN_ITEM_NAMES[{index}] is {}, which isn't a handled action! Something is seriously wrong!",
+                    DROPDOWN_ITEM_NAMES[index]
+                ));
+                None
+            }
         }
     }
 
     fn delete(&mut self, path: PathBuf) {
         if let Err(e) = fs::remove_file(path) {
-            log(format!("Item::delete(): couldn't delete item {}; generated error {e}", self.name));
+            log(format!(
+                "Item::delete(): couldn't delete item {}; generated error {e}",
+                self.name
+            ));
         }
     }
 
@@ -123,4 +148,3 @@ impl Item {
         self.typing_buffer = Some(TypingBuffer::new(TypingLocation::Rename));
     }
 }
-

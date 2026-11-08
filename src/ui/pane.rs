@@ -1,7 +1,7 @@
 use tuin::*;
 
 use super::item::Item;
-use crate::{ui::DROPDOWN_ITEM_NAMES, logging::log, state::*};
+use crate::{logging::log, state::*, ui::DROPDOWN_ITEM_NAMES};
 
 use std::{fs::read_dir, path::PathBuf};
 
@@ -33,13 +33,12 @@ impl Pane {
 
     /// Build a column of widgets to represent this Pane.
     pub fn build(&self) -> Widget {
-        let mut column = col![
-            Widget::Label(self.title()),
-            Widget::Pad
-        ];
+        let mut column = col![Widget::Label(self.title()), Widget::Pad];
 
         let mut last_row = self.first_row + height() - 2;
-        if last_row > self.items.len() { last_row = self.items.len(); }
+        if last_row > self.items.len() {
+            last_row = self.items.len();
+        }
 
         for item in &self.items[self.first_row..last_row] {
             column.add_child(item.build(self.hovered));
@@ -76,7 +75,8 @@ impl Pane {
             }
         }
 
-        if should_set_index && !self.items.is_empty() && self.hovered_item_index >= self.items.len() {
+        if should_set_index && !self.items.is_empty() && self.hovered_item_index >= self.items.len()
+        {
             self.hovered_item_index = 0;
             self.first_row = 0;
         }
@@ -87,7 +87,9 @@ impl Pane {
 
     /// Move the highlight down one, if possible.
     pub fn move_highlight_down(&mut self) {
-        if let Some(item) = self.hovered_item() && let Some(index) = &mut item.expanded_index {
+        if let Some(item) = self.hovered_item()
+            && let Some(index) = &mut item.expanded_index
+        {
             *index += 1;
             if *index > DROPDOWN_ITEM_NAMES.len() {
                 item.expanded_index = None;
@@ -98,7 +100,11 @@ impl Pane {
 
         if !self.items.is_empty() && self.hovered_item_index < self.items.len() - 1 {
             if self.first_row + height() - 3 <= self.hovered_item_index {
-                log(format!("increasing row because hovered_item_index ({}) >= height - 3 ({})", self.hovered_item_index, height()));
+                log(format!(
+                    "increasing row because hovered_item_index ({}) >= height - 3 ({})",
+                    self.hovered_item_index,
+                    height()
+                ));
                 self.first_row += 1;
             }
             self.hovered_item().unwrap().hovered = false;
@@ -109,12 +115,14 @@ impl Pane {
 
     /// Move the highlight up one, if possible.
     pub fn move_highlight_up(&mut self) {
-        if let Some(item) = self.hovered_item() && let Some(index) = &mut item.expanded_index {
+        if let Some(item) = self.hovered_item()
+            && let Some(index) = &mut item.expanded_index
+        {
             if *index == 0 {
                 item.expanded_index = None;
             } else {
                 *index -= 1;
-                return
+                return;
             }
         }
 
@@ -147,11 +155,18 @@ impl Pane {
 
     pub fn update_typing(&mut self, input: Input) -> Option<UpdateItemResult> {
         if let Some(buffer) = &mut self.typing_buffer {
-            let Some(result) = buffer.take_input(input) else { return None; };
+            let Some(result) = buffer.take_input(input) else {
+                return None;
+            };
             self.typing_buffer = None;
             match result {
-                BufferInputResult::Cancel => Some(UpdateItemResult::SetCursorState(CursorState::Hovering)),
-                BufferInputResult::Complete(text) => { *self.path = PathBuf::from(text); Some(UpdateItemResult::DoBoth(CursorState::Hovering)) }
+                BufferInputResult::Cancel => {
+                    Some(UpdateItemResult::SetCursorState(CursorState::Hovering))
+                }
+                BufferInputResult::Complete(text) => {
+                    *self.path = PathBuf::from(text);
+                    Some(UpdateItemResult::DoBoth(CursorState::Hovering))
+                }
             }
         } else {
             let path = self.hovered_item_path();
@@ -164,7 +179,12 @@ impl Pane {
             buffer.buffer()
         } else {
             //format_path(*self.path.clone())
-            let mut path = self.path.clone().into_string().unwrap_or("[couldn't get path]".to_string()).replace("/", "/\n");
+            let mut path = self
+                .path
+                .clone()
+                .into_string()
+                .unwrap_or("[couldn't get path]".to_string())
+                .replace("/", "/\n");
             path.remove(1);
             path
         }

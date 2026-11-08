@@ -3,7 +3,7 @@ use tuin::*;
 use crate::logging::log;
 use crate::ui::*;
 
-use std::{path::PathBuf, env::current_dir};
+use std::{env::current_dir, path::PathBuf};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Message {
@@ -114,11 +114,11 @@ impl Anthilus {
     fn new_pane(&mut self) {
         let path = self.get_hovered_pane().hovered_item_path();
 
-        if !path.is_dir() { return; }
+        if !path.is_dir() {
+            return;
+        }
 
-        self.panes.push(
-            Pane::new(path)
-        );
+        self.panes.push(Pane::new(path));
 
         self.get_hovered_pane().hovered = false;
         self.hovered_pane = self.panes.len() - 1;
@@ -131,7 +131,9 @@ impl Anthilus {
         if path.is_dir() {
             *self.get_hovered_pane().path = path;
             self.get_hovered_pane().populate();
-        } else if let Some(item) = self.get_hovered_pane().hovered_item() && let Some(result) = item.select(item_path) {
+        } else if let Some(item) = self.get_hovered_pane().hovered_item()
+            && let Some(result) = item.select(item_path)
+        {
             self.use_update_result(result);
         }
     }
@@ -156,14 +158,21 @@ impl Anthilus {
             }
         }
     }
-    
+
     fn new_file(&mut self) {
         let mut file_number = 0;
         let mut file_name = String::from("file0");
 
         // this has probably been properly styled by now but it was one hell of a one-liner when I
         // wrote it
-        while !self.get_hovered_pane().items.iter().filter(|i| i.name() == file_name).collect::<Vec<_>>().is_empty() {
+        while !self
+            .get_hovered_pane()
+            .items
+            .iter()
+            .filter(|i| i.name() == file_name)
+            .collect::<Vec<_>>()
+            .is_empty()
+        {
             file_number += 1;
             file_name = format!("file{file_number}");
         }
@@ -171,7 +180,9 @@ impl Anthilus {
         let mut path = self.get_hovered_pane().path.clone();
         path.push(&file_name);
         if let Err(e) = std::fs::write(*path, "") {
-            log(format!("Anthilus::new_file(): Couldn't write to {file_name} because {e}"));
+            log(format!(
+                "Anthilus::new_file(): Couldn't write to {file_name} because {e}"
+            ));
         }
 
         self.get_hovered_pane().populate();
@@ -227,7 +238,9 @@ impl TypingBuffer {
             Input::Character(c) => self.buffer.push(c),
             Input::Escape => return Some(BufferInputResult::Cancel),
             Input::Return => return Some(BufferInputResult::Complete(self.buffer.clone())),
-            Input::Backspace => { self.buffer.pop(); }
+            Input::Backspace => {
+                self.buffer.pop();
+            }
             _ => {}
         }
 
