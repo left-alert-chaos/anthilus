@@ -8,7 +8,7 @@ use crate::{
 use std::{fs, path::PathBuf};
 
 /// The names of the options shown when an item is expanded
-pub static DROPDOWN_ITEM_NAMES: [&str; 2] = ["Delete", "Rename"];
+pub static DROPDOWN_ITEM_NAMES: [&str; 4] = ["Open", "Open in new pane", "Delete", "Rename"];
 
 #[derive(Clone, Debug)]
 pub struct Item {
@@ -63,6 +63,7 @@ impl Item {
 
             if let Some(Widget::Label(string)) = main.child(index)
                 && index != 0
+                && pane_is_hovered
             {
                 string.insert_str(0, "\x1b[1;31m ");
                 string.push_str("\x1b[0m");
@@ -118,7 +119,7 @@ impl Item {
                         self.name
                     ));
                 }
-                Some(UpdateItemResult::DoBoth(CursorState::Hovering))
+                Some(UpdateItemResult::RepopulateAndHover)
             }
         }
     }
@@ -138,6 +139,8 @@ impl Item {
                 self.start_rename();
                 Some(UpdateItemResult::SetCursorState(CursorState::Typing))
             }
+            "Open" => Some(UpdateItemResult::Goto),
+            "Open in new pane" => Some(UpdateItemResult::NewPane),
             _ => {
                 log(format!(
                     "Item::select_dropdown(): DROPDOWN_ITEM_NAMES[{index}] is {}, which isn't a handled action! Something is seriously wrong!",

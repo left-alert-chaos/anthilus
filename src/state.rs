@@ -144,11 +144,7 @@ impl Anthilus {
             return;
         }
 
-        if path.is_dir() {
-            *self.get_hovered_pane().path = path.clone();
-            self.get_hovered_pane().stop_searching();
-            self.get_hovered_pane().populate();
-        } else if let Some(item) = self.get_hovered_pane().hovered_item()
+        if let Some(item) = self.get_hovered_pane().hovered_item()
             && let Some(result) = item.select(path)
         {
             self.use_update_result(result);
@@ -169,9 +165,21 @@ impl Anthilus {
         match result {
             UpdateItemResult::Repopulate => self.get_hovered_pane().populate(),
             UpdateItemResult::SetCursorState(state) => self.cursor_state = state,
-            UpdateItemResult::DoBoth(state) => {
+            UpdateItemResult::RepopulateAndHover => {
                 self.get_hovered_pane().populate();
-                self.cursor_state = state;
+                self.cursor_state = CursorState::Hovering;
+            }
+            UpdateItemResult::Goto => {
+                let path = self.get_hovered_pane().hovered_item_path();
+                self.get_hovered_pane().goto(path);
+            }
+            UpdateItemResult::NewPane => {
+                let path = self.get_hovered_pane().hovered_item_path();
+                self.get_hovered_pane().hovered = false;
+                self.hovered_pane += 1;
+                self.panes.push(Pane::new(path));
+                self.get_hovered_pane().hovered = true;
+                
             }
         }
     }
@@ -238,7 +246,9 @@ pub enum CursorState {
 pub enum UpdateItemResult {
     Repopulate,
     SetCursorState(CursorState),
-    DoBoth(CursorState),
+    RepopulateAndHover,
+    Goto,
+    NewPane,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]

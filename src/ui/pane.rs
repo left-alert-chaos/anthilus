@@ -74,16 +74,6 @@ impl Pane {
             String::from("[unknown file name]")
         };
 
-        // read file and display lines as items
-        if self.pane_type == PaneType::Preview {
-            if let Ok(slice) = read(&*self.path) && let Ok(text) = String::from_utf8(slice) {
-                for line in text.split('\n') {
-                    self.items.push(Item::new(line, false, true));
-                }
-            }
-            return;
-        }
-
         // skip clearing items if currently receiving search results
         if let Some(receiver) = &mut self.search_receiver {
             let hover_first = self.items.is_empty();
@@ -107,6 +97,16 @@ impl Pane {
         };
 
         self.items.clear();
+
+        // read file and display lines as items
+        if self.pane_type == PaneType::Preview {
+            if let Ok(slice) = read(&*self.path) && let Ok(text) = String::from_utf8(slice) {
+                for line in text.split('\n') {
+                    self.items.push(Item::new(line, false, true));
+                }
+            }
+            return;
+        }
 
         let Ok(files) = read_dir(*self.path.clone()) else {
             return;
@@ -237,6 +237,12 @@ impl Pane {
         self.search_pattern = None;
     }
 
+    pub fn goto(&mut self, path: PathBuf) {
+        self.pane_type = if path.is_dir() { PaneType::Directory } else { PaneType::Preview };
+        *self.path = path;
+        self.populate();
+    }
+
     fn finish_buffer(&mut self, text: String) -> Option<UpdateItemResult> {
         let Some(buffer) = &mut self.typing_buffer else {
             unreachable!();
@@ -246,7 +252,7 @@ impl Pane {
             TypingLocation::Goto => {
                 *self.path = PathBuf::from(text);
                 self.typing_buffer = None;
-                Some(UpdateItemResult::DoBoth(CursorState::Hovering))
+                Some(UpdateItemResult::RepopulateAndHover)
             }
             // start a file search in a background thread
             TypingLocation::Search => {
@@ -258,7 +264,7 @@ impl Pane {
 
                 self.search_receiver = Some(receiver);
                 self.typing_buffer = None;
-                Some(UpdateItemResult::DoBoth(CursorState::Hovering))
+                Some(UpdateItemResult::RepopulateAndHover)
             }
             _ => unreachable!(),
         }
