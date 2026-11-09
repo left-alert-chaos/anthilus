@@ -17,16 +17,18 @@ pub struct Item {
     pub hovered: bool,
     typing_buffer: Option<TypingBuffer>,
     is_dir: bool,
+    pub is_preview_line: bool,
 }
 
 impl Item {
-    pub fn new(name: impl Into<String>, is_dir: bool) -> Self {
+    pub fn new(name: impl Into<String>, is_dir: bool, is_preview_line: bool) -> Self {
         Self {
             name: name.into(),
             expanded_index: None,
             hovered: false,
             typing_buffer: None,
             is_dir,
+            is_preview_line,
         }
     }
 
@@ -37,10 +39,12 @@ impl Item {
             self.name()
         };
 
-        if self.is_dir {
-            text.insert_str(0, " ");
-        } else {
-            text.insert_str(0, " ");
+        if !self.is_preview_line {
+            if self.is_dir {
+                text.insert_str(0, " ");
+            } else {
+                text.insert_str(0, " ");
+            }
         }
 
         if self.hovered && pane_is_hovered {
@@ -74,6 +78,8 @@ impl Item {
 
     /// Returns whether or not to repopulate pane after item performs action
     pub fn select(&mut self, path: PathBuf) -> Option<UpdateItemResult> {
+        if self.is_preview_line { return None; }
+
         if let Some(index) = self.expanded_index {
             match index {
                 0 => {

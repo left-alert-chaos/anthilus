@@ -4,11 +4,18 @@ use super::item::Item;
 use crate::{logging::log, state::*, ui::DROPDOWN_ITEM_NAMES};
 
 use std::{
-    fs::{metadata, read_dir},
+    fs::{metadata, read_dir, read},
     path::PathBuf,
     sync::mpsc::{Receiver, Sender, channel},
     thread::spawn,
 };
+
+/// What purpose the pane is serving
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum PaneType {
+    Preview,
+    Directory,
+}
 
 /// One pane in the UI
 #[derive(Debug)]
@@ -21,13 +28,15 @@ pub struct Pane {
     pub typing_buffer: Option<TypingBuffer>,
     search_receiver: Option<Receiver<Item>>,
     search_pattern: Option<String>,
+    pane_type: PaneType,
 }
 
 impl Pane {
     /// Create a new Pane with the given directory.
     pub fn new(dir: impl Into<PathBuf>) -> Self {
+        let dir = dir.into();
         let mut new = Self {
-            path: Box::new(dir.into()),
+            path: Box::new(dir.clone()),
             items: vec![],
             hovered_item_index: 0,
             hovered: true,
@@ -35,6 +44,7 @@ impl Pane {
             typing_buffer: None,
             search_receiver: None,
             search_pattern: None,
+            pane_type: if dir.is_dir() { PaneType::Directory } else { PaneType::Preview },
         };
         new.populate();
         new
@@ -63,6 +73,16 @@ impl Pane {
         } else {
             String::from("[unknown file name]")
         };
+
+        // read file and display lines as items
+        if self.pane_type == PaneType::Preview {
+            if let Ok(slice) = read(&*self.path) && let Ok(text) = String::from_utf8(slice) {
+                for line in text.split('\n') {
+                    self.items.push(Item::new(line, false, true));
+                }
+            }
+            return;
+        }
 
         // skip clearing items if currently receiving search results
         if let Some(receiver) = &mut self.search_receiver {
@@ -102,7 +122,7 @@ impl Pane {
                 if let Some(hovered) = &hovered_item && hovered.name() == name {
                     self.items.push(hovered.clone());
                 } else {
-                    self.items.push(Item::new(&name, entry.path().is_dir()));
+                    self.items.push(Item::new(&name, entry.path().is_dir(), false));
                 }
 
                 if name == hovered_name {
@@ -292,7 +312,7 @@ fn search(sender: Sender<Item>, dir: PathBuf, pattern: String, is_parent: bool) 
         let last_segment = format_path(file.path());
         if last_segment.contains(&pattern) {
             log(format!("ui::pane::search(): Found file {name}"));
-            if let Err(e) = sender.send(Item::new(name, file.path().is_dir())) {
+            if let Err(e) = sender.send(Item::new(name, file.path().is_dir(), false)) {
                 log(format!(
                     "ui::pane::search(): Couldn't send item because {e}"
                 ));

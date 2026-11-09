@@ -138,6 +138,11 @@ impl Anthilus {
 
     fn select(&mut self) {
         let path = self.get_hovered_pane().hovered_item_path();
+        if let Some(item) = self.get_hovered_pane().hovered_item() && item.is_preview_line {
+            return;
+        } else if self.get_hovered_pane().hovered_item().is_none() {
+            return;
+        }
 
         if path.is_dir() {
             *self.get_hovered_pane().path = path.clone();
