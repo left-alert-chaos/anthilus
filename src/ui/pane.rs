@@ -20,6 +20,7 @@ pub struct Pane {
     pub first_row: usize,
     pub typing_buffer: Option<TypingBuffer>,
     search_receiver: Option<Receiver<Item>>,
+    search_pattern: Option<String>,
 }
 
 impl Pane {
@@ -33,6 +34,7 @@ impl Pane {
             first_row: 0,
             typing_buffer: None,
             search_receiver: None,
+            search_pattern: None,
         };
         new.populate();
         new
@@ -88,7 +90,7 @@ impl Pane {
         for file in files {
             if let Ok(entry) = file {
                 let name = format_path(entry.path());
-                self.items.push(Item::new(&name));
+                self.items.push(Item::new(&name, entry.path().is_dir()));
 
                 if name == hovered_name {
                     self.hovered_item_index = self.items.len() - 1;
@@ -102,7 +104,8 @@ impl Pane {
             self.hovered_item_index = 0;
             self.first_row = 0;
         }
-        if let Some(item) = self.hovered_item() {
+        let buffer = self.typing_buffer.is_some();
+        if let Some(item) = self.hovered_item() && !buffer {
             item.hovered = true;
         }
     }
@@ -183,6 +186,7 @@ impl Pane {
             match result {
                 BufferInputResult::Cancel => {
                     self.typing_buffer = None;
+                    self.items[self.hovered_item_index].hovered = true;
                     Some(UpdateItemResult::SetCursorState(CursorState::Hovering))
                 }
                 BufferInputResult::Complete(text) => self.finish_buffer(text),
@@ -196,6 +200,7 @@ impl Pane {
     pub fn stop_searching(&mut self) {
         self.typing_buffer = None;
         self.search_receiver = None;
+        self.search_pattern = None;
     }
 
     fn finish_buffer(&mut self, text: String) -> Option<UpdateItemResult> {
@@ -211,6 +216,7 @@ impl Pane {
             }
             // start a file search in a background thread
             TypingLocation::Search => {
+                self.search_pattern = Some(text.clone());
                 let (sender, receiver) = channel();
                 let path = *self.path.clone();
                 self.items.clear();
@@ -227,12 +233,17 @@ impl Pane {
     fn title(&self) -> String {
         if let Some(buffer) = &self.typing_buffer {
             if buffer.location() == TypingLocation::Goto {
-                buffer.buffer()
+                format!("Go to: \x1b[1;31m{}", buffer.buffer())
             } else {
-                format!("{}\n\n{}", self.display_path(), buffer.buffer())
+                format!("{}\n\nFind: \x1b[1;31m{}\x1b[0m", self.display_path(), buffer.buffer())
             }
         } else {
-            self.display_path()
+            let path = self.display_path();
+            if let Some(pattern) = &self.search_pattern {
+                format!("{}\n\nFind: \x1b[1;31m{}\x1b[0m", path, pattern)
+            } else {
+                path
+            }
         }
     }
 
@@ -244,7 +255,7 @@ impl Pane {
             .unwrap_or("[couldn't get path]".to_string())
             .replace("/", "/\n");
         path.remove(1);
-        path
+        path.trim().to_string()
     }
 }
 
@@ -267,7 +278,7 @@ fn search(sender: Sender<Item>, dir: PathBuf, pattern: String, is_parent: bool) 
         let last_segment = format_path(file.path());
         if last_segment.contains(&pattern) {
             log(format!("ui::pane::search(): Found file {name}"));
-            if let Err(e) = sender.send(Item::new(name)) {
+            if let Err(e) = sender.send(Item::new(name, file.path().is_dir())) {
                 log(format!(
                     "ui::pane::search(): Couldn't send item because {e}"
                 ));

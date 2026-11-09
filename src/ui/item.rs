@@ -16,15 +16,17 @@ pub struct Item {
     pub expanded_index: Option<usize>,
     pub hovered: bool,
     typing_buffer: Option<TypingBuffer>,
+    is_dir: bool,
 }
 
 impl Item {
-    pub fn new(name: impl Into<String>) -> Self {
+    pub fn new(name: impl Into<String>, is_dir: bool) -> Self {
         Self {
             name: name.into(),
             expanded_index: None,
             hovered: false,
             typing_buffer: None,
+            is_dir,
         }
     }
 
@@ -35,7 +37,10 @@ impl Item {
             self.name()
         };
 
-        // invert colors if hovered
+        if self.is_dir {
+            text.insert_str(0, " ");
+        }
+
         if self.hovered && pane_is_hovered {
             text.insert_str(0, "\x1b[1;31m ");
         }

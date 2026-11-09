@@ -138,13 +138,13 @@ impl Anthilus {
 
     fn select(&mut self) {
         let path = self.get_hovered_pane().hovered_item_path();
-        let item_path = self.get_hovered_pane().hovered_item_path();
 
         if path.is_dir() {
-            *self.get_hovered_pane().path = path;
+            *self.get_hovered_pane().path = path.clone();
+            self.get_hovered_pane().stop_searching();
             self.get_hovered_pane().populate();
         } else if let Some(item) = self.get_hovered_pane().hovered_item()
-            && let Some(result) = item.select(item_path)
+            && let Some(result) = item.select(path)
         {
             self.use_update_result(result);
         }
@@ -202,12 +202,20 @@ impl Anthilus {
 
     fn goto(&mut self) {
         let pane = self.get_hovered_pane();
+        if let Some(item) = pane.hovered_item() {
+            item.hovered = false;
+        }
+
         pane.typing_buffer = Some(TypingBuffer::new(TypingLocation::Goto));
         self.cursor_state = CursorState::Typing;
     }
 
     fn search(&mut self) {
         let pane = self.get_hovered_pane();
+        if let Some(item) = pane.hovered_item() {
+            item.hovered = false;
+        }
+
         pane.typing_buffer = Some(TypingBuffer::new(TypingLocation::Search));
         self.cursor_state = CursorState::Typing;
     }
@@ -285,7 +293,6 @@ pub enum BufferInputResult {
 pub fn repopulate_check(info: &mut RuntimeInfo) -> Option<Message> {
     if info.elapsed().as_secs_f64() > 0.25 {
         info.reset_clock();
-        log("state::repopulate_check(): Returning Some(Message::Repopulate)");
         Some(Message::Repopulate)
     } else {
         None
