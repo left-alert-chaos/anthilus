@@ -39,6 +39,8 @@ impl Item {
 
         if self.is_dir {
             text.insert_str(0, " ");
+        } else {
+            text.insert_str(0, " ");
         }
 
         if self.hovered && pane_is_hovered {

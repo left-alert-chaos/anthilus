@@ -79,6 +79,13 @@ impl Pane {
             return;
         }
 
+        // store current item in case the same file still exists, to be able to keep context menus
+        // open
+        let hovered_item = match self.hovered_item() {
+            Some(item) => Some(item.clone()),
+            None => None,
+        };
+
         self.items.clear();
 
         let Ok(files) = read_dir(*self.path.clone()) else {
@@ -90,7 +97,13 @@ impl Pane {
         for file in files {
             if let Ok(entry) = file {
                 let name = format_path(entry.path());
-                self.items.push(Item::new(&name, entry.path().is_dir()));
+
+                // check if it's the currently hovered Item
+                if let Some(hovered) = &hovered_item && hovered.name() == name {
+                    self.items.push(hovered.clone());
+                } else {
+                    self.items.push(Item::new(&name, entry.path().is_dir()));
+                }
 
                 if name == hovered_name {
                     self.hovered_item_index = self.items.len() - 1;
@@ -105,6 +118,7 @@ impl Pane {
             self.first_row = 0;
         }
         let buffer = self.typing_buffer.is_some();
+
         if let Some(item) = self.hovered_item() && !buffer {
             item.hovered = true;
         }
