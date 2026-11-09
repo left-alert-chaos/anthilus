@@ -41,9 +41,7 @@ impl Widget {
                 children,
                 compositor_type,
             } => compositor_type.render(children, context),
-            Self::Pad => {
-                Render::new(String::new(), context)
-            }
+            Self::Pad => Render::new(String::new(), context),
         }
     }
 }

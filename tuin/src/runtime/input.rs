@@ -73,7 +73,9 @@ impl Input {
 
         let mut buffer = [0, 0];
         if let Err(e) = stdin.read(&mut buffer) {
-            log(format!("Couldn't read next character because {e}. Returning Input::Escape"));
+            log(format!(
+                "Couldn't read next character because {e}. Returning Input::Escape"
+            ));
             return Ok(Self::Escape);
         }
 

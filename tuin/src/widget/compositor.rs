@@ -19,7 +19,7 @@ impl CompositorType {
                 let mut render = Render::new(self.render_row(children, context), context);
                 render.context.max_width = None;
                 render
-            },
+            }
             Self::Column => Render::new(self.render_column(children, context), context),
         }
     }

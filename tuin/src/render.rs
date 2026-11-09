@@ -23,7 +23,9 @@ impl Render {
             if len > width {
                 width = len;
             }
-            if let Some(max_width) = context.max_width && width as u32 > max_width {
+            if let Some(max_width) = context.max_width
+                && width as u32 > max_width
+            {
                 width = max_width as usize;
             }
 
@@ -62,12 +64,18 @@ impl From<Render> for String {
                 if line_length(line.clone()) > (max_width - 1) as usize {
                     // store escapes while other characters are trimmed so that styling is preserved
                     let mut escapes = String::new();
-                    while line.contains('\x1b') { escapes.push(line.pop().unwrap()); }
+                    while line.contains('\x1b') {
+                        escapes.push(line.pop().unwrap());
+                    }
 
-                    while line_length(line.clone()) > (max_width - 3) as usize { line.pop(); }
+                    while line_length(line.clone()) > (max_width - 3) as usize {
+                        line.pop();
+                    }
                     line.push_str("...");
 
-                    while !escapes.is_empty() { line.push(escapes.pop().unwrap()); }
+                    while !escapes.is_empty() {
+                        line.push(escapes.pop().unwrap());
+                    }
                 }
             }
 
@@ -95,7 +103,7 @@ pub struct RenderContext {
 
     /// The maximum width this widget is allowed to have.
     pub max_width: Option<u32>,
-    
+
     /// The horizontal padding to apply between widgets.
     pub row_pad: u32,
 }
@@ -122,15 +130,19 @@ pub fn line_length(mut line: String) -> usize {
             while !(line.starts_with('H') || line.starts_with(' ')) {
                 line.remove(0);
             }
-            
+
             if line.starts_with('H') {
                 line.remove(0);
             }
-            if !line.starts_with('\x1b') { break; }
+            if !line.starts_with('\x1b') {
+                break;
+            }
         }
     }
 
-    while line.contains('\x1b') { line.pop(); }
+    while line.contains('\x1b') {
+        line.pop();
+    }
 
     line.len()
 }
