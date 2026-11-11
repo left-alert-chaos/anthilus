@@ -103,6 +103,8 @@ impl Pane {
         self.items.clear();
         let mut should_set_index = true;
 
+        self.pane_type = if self.path.is_dir() { PaneType::Directory } else { PaneType::Preview };
+
         // read file and display lines as items
         match self.pane_type {
             PaneType::Preview => {
