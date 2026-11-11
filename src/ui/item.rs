@@ -8,7 +8,7 @@ use crate::{
 use std::{fs, path::PathBuf};
 
 /// The names of the options shown when an item is expanded
-pub static DROPDOWN_ITEM_NAMES: [&str; 2] = ["Delete", "Rename"];
+pub static DROPDOWN_ITEM_NAMES: [&str; 4] = ["Open", "Open in new pane", "Delete", "Rename"];
 
 #[derive(Clone, Debug)]
 pub struct Item {
@@ -17,16 +17,19 @@ pub struct Item {
     pub hovered: bool,
     typing_buffer: Option<TypingBuffer>,
     is_dir: bool,
+    pub is_preview_line: bool,
 }
 
 impl Item {
-    pub fn new(name: impl Into<String>, is_dir: bool) -> Self {
+    pub fn new(name: impl Into<String>, is_dir: bool, is_preview_line: bool) -> Self {
+        let name = name.into();
         Self {
             name: name.into(),
             expanded_index: None,
             hovered: false,
             typing_buffer: None,
             is_dir,
+            is_preview_line,
         }
     }
 
@@ -37,10 +40,12 @@ impl Item {
             self.name()
         };
 
-        if self.is_dir {
-            text.insert_str(0, " ");
-        } else {
-            text.insert_str(0, " ");
+        if !self.is_preview_line {
+            if self.is_dir {
+                text.insert_str(0, " ");
+            } else {
+                text.insert_str(0, " ");
+            }
         }
 
         if self.hovered && pane_is_hovered {
@@ -59,6 +64,7 @@ impl Item {
 
             if let Some(Widget::Label(string)) = main.child(index)
                 && index != 0
+                && pane_is_hovered
             {
                 string.insert_str(0, "\x1b[1;31m ");
                 string.push_str("\x1b[0m");
@@ -74,6 +80,8 @@ impl Item {
 
     /// Returns whether or not to repopulate pane after item performs action
     pub fn select(&mut self, path: PathBuf) -> Option<UpdateItemResult> {
+        if self.is_preview_line { return None; }
+
         if let Some(index) = self.expanded_index {
             match index {
                 0 => {
@@ -112,7 +120,7 @@ impl Item {
                         self.name
                     ));
                 }
-                Some(UpdateItemResult::DoBoth(CursorState::Hovering))
+                Some(UpdateItemResult::RepopulateAndHover)
             }
         }
     }
@@ -132,6 +140,8 @@ impl Item {
                 self.start_rename();
                 Some(UpdateItemResult::SetCursorState(CursorState::Typing))
             }
+            "Open" => Some(UpdateItemResult::Goto),
+            "Open in new pane" => Some(UpdateItemResult::NewPane),
             _ => {
                 log(format!(
                     "Item::select_dropdown(): DROPDOWN_ITEM_NAMES[{index}] is {}, which isn't a handled action! Something is seriously wrong!",

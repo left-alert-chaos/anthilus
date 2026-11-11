@@ -5,7 +5,7 @@ use crate::*;
 
 /// # CompositorType
 /// This enum differentiates between a vertical or horizontal compositor.
-#[derive(Eq, PartialEq, Clone, Copy)]
+#[derive(Eq, PartialEq, Clone, Copy, Debug)]
 pub enum CompositorType {
     Row,
     Column,

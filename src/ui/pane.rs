@@ -4,11 +4,18 @@ use super::item::Item;
 use crate::{logging::log, state::*, ui::DROPDOWN_ITEM_NAMES};
 
 use std::{
-    fs::{metadata, read_dir},
+    fs::{metadata, read_dir, read},
     path::PathBuf,
     sync::mpsc::{Receiver, Sender, channel},
     thread::spawn,
 };
+
+/// What purpose the pane is serving
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum PaneType {
+    Preview,
+    Directory,
+}
 
 /// One pane in the UI
 #[derive(Debug)]
@@ -21,13 +28,15 @@ pub struct Pane {
     pub typing_buffer: Option<TypingBuffer>,
     search_receiver: Option<Receiver<Item>>,
     search_pattern: Option<String>,
+    pane_type: PaneType,
 }
 
 impl Pane {
     /// Create a new Pane with the given directory.
     pub fn new(dir: impl Into<PathBuf>) -> Self {
+        let dir = dir.into();
         let mut new = Self {
-            path: Box::new(dir.into()),
+            path: Box::new(dir.clone()),
             items: vec![],
             hovered_item_index: 0,
             hovered: true,
@@ -35,6 +44,7 @@ impl Pane {
             typing_buffer: None,
             search_receiver: None,
             search_pattern: None,
+            pane_type: if dir.is_dir() { PaneType::Directory } else { PaneType::Preview },
         };
         new.populate();
         new
@@ -87,27 +97,42 @@ impl Pane {
         };
 
         self.items.clear();
-
-        let Ok(files) = read_dir(*self.path.clone()) else {
-            return;
-        };
-
         let mut should_set_index = true;
 
-        for file in files {
-            if let Ok(entry) = file {
-                let name = format_path(entry.path());
-
-                // check if it's the currently hovered Item
-                if let Some(hovered) = &hovered_item && hovered.name() == name {
-                    self.items.push(hovered.clone());
-                } else {
-                    self.items.push(Item::new(&name, entry.path().is_dir()));
+        // read file and display lines as items
+        match self.pane_type {
+            PaneType::Preview => {
+                if let Ok(slice) = read(&*self.path) && let Ok(text) = String::from_utf8(slice) {
+                    for line in text.split('\n') {
+                        self.items.push(Item::new(line, false, true));
+                        if line == hovered_name {
+                            self.hovered_item_index = self.items.len() - 1;
+                            should_set_index = false;
+                        }
+                    }
                 }
+            }
+            PaneType::Directory => {
+                let Ok(files) = read_dir(*self.path.clone()) else {
+                    return;
+                };
 
-                if name == hovered_name {
-                    self.hovered_item_index = self.items.len() - 1;
-                    should_set_index = false;
+                for file in files {
+                    if let Ok(entry) = file {
+                        let name = format_path(entry.path());
+
+                        // check if it's the currently hovered Item
+                        if let Some(hovered) = &hovered_item && hovered.name() == name {
+                            self.items.push(hovered.clone());
+                        } else {
+                            self.items.push(Item::new(&name, entry.path().is_dir(), false));
+                        }
+
+                        if name == hovered_name {
+                            self.hovered_item_index = self.items.len() - 1;
+                            should_set_index = false;
+                        }
+                    }
                 }
             }
         }
@@ -217,6 +242,12 @@ impl Pane {
         self.search_pattern = None;
     }
 
+    pub fn goto(&mut self, path: PathBuf) {
+        self.pane_type = if path.is_dir() { PaneType::Directory } else { PaneType::Preview };
+        *self.path = path;
+        self.populate();
+    }
+
     fn finish_buffer(&mut self, text: String) -> Option<UpdateItemResult> {
         let Some(buffer) = &mut self.typing_buffer else {
             unreachable!();
@@ -226,7 +257,7 @@ impl Pane {
             TypingLocation::Goto => {
                 *self.path = PathBuf::from(text);
                 self.typing_buffer = None;
-                Some(UpdateItemResult::DoBoth(CursorState::Hovering))
+                Some(UpdateItemResult::RepopulateAndHover)
             }
             // start a file search in a background thread
             TypingLocation::Search => {
@@ -238,7 +269,7 @@ impl Pane {
 
                 self.search_receiver = Some(receiver);
                 self.typing_buffer = None;
-                Some(UpdateItemResult::DoBoth(CursorState::Hovering))
+                Some(UpdateItemResult::RepopulateAndHover)
             }
             _ => unreachable!(),
         }
@@ -292,7 +323,7 @@ fn search(sender: Sender<Item>, dir: PathBuf, pattern: String, is_parent: bool) 
         let last_segment = format_path(file.path());
         if last_segment.contains(&pattern) {
             log(format!("ui::pane::search(): Found file {name}"));
-            if let Err(e) = sender.send(Item::new(name, file.path().is_dir())) {
+            if let Err(e) = sender.send(Item::new(name, file.path().is_dir(), false)) {
                 log(format!(
                     "ui::pane::search(): Couldn't send item because {e}"
                 ));
