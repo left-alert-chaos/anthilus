@@ -22,6 +22,7 @@ pub struct Item {
 
 impl Item {
     pub fn new(name: impl Into<String>, is_dir: bool, is_preview_line: bool) -> Self {
+        let name = name.into();
         Self {
             name: name.into(),
             expanded_index: None,

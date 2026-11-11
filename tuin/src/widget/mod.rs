@@ -9,7 +9,7 @@ pub use compositor::CompositorType;
 /// # Widget
 /// This is the base for all UI elements. This enum is both standard widgets and compositors.
 /// T is a Message that some widgets emit when interacted with.
-#[derive(Eq, PartialEq, Clone)]
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub enum Widget {
     /// A piece of text
     Label(String),

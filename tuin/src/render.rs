@@ -127,11 +127,11 @@ pub fn line_length(mut line: String) -> usize {
         loop {
             // spaces are used to indent items, so they can be used as a marker of the end of an
             // ansi code
-            while !(line.starts_with('H') || line.starts_with(' ')) {
+            while !(line.starts_with('H') || line.starts_with(' ') || line.starts_with('m')) {
                 line.remove(0);
             }
 
-            if line.starts_with('H') {
+            if line.starts_with('H') || line.starts_with('m') {
                 line.remove(0);
             }
             if !line.starts_with('\x1b') {
@@ -144,5 +144,10 @@ pub fn line_length(mut line: String) -> usize {
         line.pop();
     }
 
-    line.len()
+    let mut len = 0;
+    for char in line.chars() {
+        len += if char.is_ascii() { 1 } else { 2 };
+    }
+
+    len
 }

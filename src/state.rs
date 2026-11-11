@@ -176,10 +176,9 @@ impl Anthilus {
             UpdateItemResult::NewPane => {
                 let path = self.get_hovered_pane().hovered_item_path();
                 self.get_hovered_pane().hovered = false;
-                self.hovered_pane += 1;
                 self.panes.push(Pane::new(path));
+                self.hovered_pane = self.panes.len() - 1;
                 self.get_hovered_pane().hovered = true;
-                
             }
         }
     }

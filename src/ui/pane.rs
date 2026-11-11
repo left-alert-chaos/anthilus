@@ -97,37 +97,42 @@ impl Pane {
         };
 
         self.items.clear();
-
-        // read file and display lines as items
-        if self.pane_type == PaneType::Preview {
-            if let Ok(slice) = read(&*self.path) && let Ok(text) = String::from_utf8(slice) {
-                for line in text.split('\n') {
-                    self.items.push(Item::new(line, false, true));
-                }
-            }
-            return;
-        }
-
-        let Ok(files) = read_dir(*self.path.clone()) else {
-            return;
-        };
-
         let mut should_set_index = true;
 
-        for file in files {
-            if let Ok(entry) = file {
-                let name = format_path(entry.path());
-
-                // check if it's the currently hovered Item
-                if let Some(hovered) = &hovered_item && hovered.name() == name {
-                    self.items.push(hovered.clone());
-                } else {
-                    self.items.push(Item::new(&name, entry.path().is_dir(), false));
+        // read file and display lines as items
+        match self.pane_type {
+            PaneType::Preview => {
+                if let Ok(slice) = read(&*self.path) && let Ok(text) = String::from_utf8(slice) {
+                    for line in text.split('\n') {
+                        self.items.push(Item::new(line, false, true));
+                        if line == hovered_name {
+                            self.hovered_item_index = self.items.len() - 1;
+                            should_set_index = false;
+                        }
+                    }
                 }
+            }
+            PaneType::Directory => {
+                let Ok(files) = read_dir(*self.path.clone()) else {
+                    return;
+                };
 
-                if name == hovered_name {
-                    self.hovered_item_index = self.items.len() - 1;
-                    should_set_index = false;
+                for file in files {
+                    if let Ok(entry) = file {
+                        let name = format_path(entry.path());
+
+                        // check if it's the currently hovered Item
+                        if let Some(hovered) = &hovered_item && hovered.name() == name {
+                            self.items.push(hovered.clone());
+                        } else {
+                            self.items.push(Item::new(&name, entry.path().is_dir(), false));
+                        }
+
+                        if name == hovered_name {
+                            self.hovered_item_index = self.items.len() - 1;
+                            should_set_index = false;
+                        }
+                    }
                 }
             }
         }
