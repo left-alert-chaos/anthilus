@@ -173,7 +173,7 @@ impl Item {
     }
 
     fn delete_dir(&self, path: PathBuf) {
-        if let Err(e) = fs::remove_dir(path) {
+        if let Err(e) = fs::remove_dir_all(path) {
             log(format!(
                 "Item::delete(): couldn't delete directory item {}; generated error {e}",
                 self.name,

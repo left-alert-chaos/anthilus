@@ -91,9 +91,11 @@ impl Anthilus {
                 self.panes.remove(self.hovered_pane);
                 if self.hovered_pane > 0 {
                     self.hovered_pane -= 1;
-                    self.panes[self.hovered_pane].hovered = true;
-                } else if self.panes.is_empty() {
+                }
+                if self.panes.is_empty() {
                     self.quit = true;
+                } else {
+                    self.panes[self.hovered_pane].hovered = true;
                 }
             }
             Input::Character('r') => self.get_hovered_pane().populate(),
