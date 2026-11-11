@@ -122,7 +122,7 @@ impl Default for RenderContext {
 }
 
 /// Get the line length after removing ANSI codes
-pub fn line_length(mut line: String) -> usize {
+pub fn old_line_length(mut line: String) -> usize {
     if line.starts_with("\x1b") {
         loop {
             // spaces are used to indent items, so they can be used as a marker of the end of an
@@ -147,6 +147,21 @@ pub fn line_length(mut line: String) -> usize {
     let mut len = 0;
     for char in line.chars() {
         len += if char.is_ascii() { 1 } else { 2 };
+    }
+
+    len
+}
+
+pub fn line_length(line: String) -> usize {
+    let mut len = 0;
+
+    for segment in line.split("\x1b[") {
+        if segment.len() < 3 { continue; }
+
+        let segment_len = segment.len();
+        if segment_len > len {
+            len = segment_len;
+        }
     }
 
     len
