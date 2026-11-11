@@ -80,7 +80,9 @@ impl Item {
 
     /// Returns whether or not to repopulate pane after item performs action
     pub fn select(&mut self, path: PathBuf) -> Option<UpdateItemResult> {
-        if self.is_preview_line { return None; }
+        if self.is_preview_line {
+            return None;
+        }
 
         if let Some(index) = self.expanded_index {
             match index {
@@ -123,7 +125,10 @@ impl Item {
         file_parent.push(string);
 
         if let Err(e) = fs::rename(path, file_parent) {
-            log(format!("Item::input_typing(): Couldn't rename item {}; generated error {e}", self.name));
+            log(format!(
+                "Item::input_typing(): Couldn't rename item {}; generated error {e}",
+                self.name
+            ));
         }
     }
 
@@ -155,7 +160,10 @@ impl Item {
     }
 
     fn delete(&self, path: PathBuf) {
-        if self.is_dir { self.delete_dir(path); return; }
+        if self.is_dir {
+            self.delete_dir(path);
+            return;
+        }
         if let Err(e) = fs::remove_file(path) {
             log(format!(
                 "Item::delete(): couldn't delete item {}; generated error {e}",

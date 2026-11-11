@@ -4,7 +4,7 @@ use super::item::Item;
 use crate::{logging::log, state::*, ui::DROPDOWN_ITEM_NAMES};
 
 use std::{
-    fs::{metadata, read_dir, read},
+    fs::{metadata, read, read_dir},
     path::PathBuf,
     sync::mpsc::{Receiver, Sender, channel},
     thread::spawn,
@@ -44,7 +44,11 @@ impl Pane {
             typing_buffer: None,
             search_receiver: None,
             search_pattern: None,
-            pane_type: if dir.is_dir() { PaneType::Directory } else { PaneType::Preview },
+            pane_type: if dir.is_dir() {
+                PaneType::Directory
+            } else {
+                PaneType::Preview
+            },
         };
         new.populate();
         new
@@ -102,7 +106,9 @@ impl Pane {
         // read file and display lines as items
         match self.pane_type {
             PaneType::Preview => {
-                if let Ok(slice) = read(&*self.path) && let Ok(text) = String::from_utf8(slice) {
+                if let Ok(slice) = read(&*self.path)
+                    && let Ok(text) = String::from_utf8(slice)
+                {
                     for line in text.split('\n') {
                         self.items.push(Item::new(line, false, true));
                         if line == hovered_name {
@@ -122,10 +128,13 @@ impl Pane {
                         let name = format_path(entry.path());
 
                         // check if it's the currently hovered Item
-                        if let Some(hovered) = &hovered_item && hovered.name() == name {
+                        if let Some(hovered) = &hovered_item
+                            && hovered.name() == name
+                        {
                             self.items.push(hovered.clone());
                         } else {
-                            self.items.push(Item::new(&name, entry.path().is_dir(), false));
+                            self.items
+                                .push(Item::new(&name, entry.path().is_dir(), false));
                         }
 
                         if name == hovered_name {
@@ -144,7 +153,9 @@ impl Pane {
         }
         let buffer = self.typing_buffer.is_some();
 
-        if let Some(item) = self.hovered_item() && !buffer {
+        if let Some(item) = self.hovered_item()
+            && !buffer
+        {
             item.hovered = true;
         }
     }
@@ -238,7 +249,11 @@ impl Pane {
     }
 
     pub fn goto(&mut self, path: PathBuf) {
-        self.pane_type = if path.is_dir() { PaneType::Directory } else { PaneType::Preview };
+        self.pane_type = if path.is_dir() {
+            PaneType::Directory
+        } else {
+            PaneType::Preview
+        };
         *self.path = path;
         self.populate();
     }
@@ -275,7 +290,11 @@ impl Pane {
             if buffer.location() == TypingLocation::Goto {
                 format!("Go to: \x1b[1;31m{}", buffer.buffer())
             } else {
-                format!("{}\n\nFind: \x1b[1;31m{}\x1b[0m", self.display_path(), buffer.buffer())
+                format!(
+                    "{}\n\nFind: \x1b[1;31m{}\x1b[0m",
+                    self.display_path(),
+                    buffer.buffer()
+                )
             }
         } else {
             let path = self.display_path();
