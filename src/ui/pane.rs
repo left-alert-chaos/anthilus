@@ -54,7 +54,7 @@ impl Pane {
     pub fn build(&self) -> Widget {
         let mut column = col![Widget::Label(self.title()), Widget::Pad];
 
-        let mut last_row = self.first_row + height() - 2;
+        let mut last_row = self.first_row + height() - self.title_height();
         if last_row > self.items.len() {
             last_row = self.items.len();
         }
@@ -163,12 +163,7 @@ impl Pane {
         }
 
         if !self.items.is_empty() && self.hovered_item_index < self.items.len() - 1 {
-            if self.first_row + height() - 3 <= self.hovered_item_index {
-                log(format!(
-                    "increasing row because hovered_item_index ({}) >= height - 3 ({})",
-                    self.hovered_item_index,
-                    height()
-                ));
+            if self.first_row + height() - self.title_height() <= self.hovered_item_index + 1 {
                 self.first_row += 1;
             }
             self.hovered_item().unwrap().hovered = false;
@@ -290,6 +285,10 @@ impl Pane {
                 path
             }
         }
+    }
+
+    fn title_height(&self) -> usize {
+        self.title().split('\n').collect::<Vec<_>>().len() + 1
     }
 
     fn display_path(&self) -> String {
