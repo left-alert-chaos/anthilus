@@ -39,6 +39,8 @@ where
 
         let loop_start = Instant::now();
 
+        print!("\x1b[?25l\x1b[?1049h");
+
         loop {
             info.frame += 1;
 
@@ -86,6 +88,8 @@ where
             let event = T::from(input);
             self.update(event);
         }
+
+        print!("\x1b[?1049l\x1b[?25h");
 
         log("State<T>::event_loop(): Ending event loop");
         exit_raw_mode();
