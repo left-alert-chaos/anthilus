@@ -111,17 +111,19 @@ impl Item {
                 Some(UpdateItemResult::SetCursorState(CursorState::Hovering))
             }
             BufferInputResult::Complete(string) => {
-                let mut file_parent = path.clone();
-                file_parent.pop();
-                file_parent.push(string);
-                if let Err(e) = fs::rename(path, file_parent) {
-                    log(format!(
-                        "Item::input_typing(): Couldn't rename item {}; generated error {e}",
-                        self.name
-                    ));
-                }
+                self.rename(path, string);
                 Some(UpdateItemResult::RepopulateAndHover)
             }
+        }
+    }
+
+    fn rename(&self, path: PathBuf, string: String) {
+        let mut file_parent = path.clone();
+        file_parent.pop();
+        file_parent.push(string);
+
+        if let Err(e) = fs::rename(path, file_parent) {
+            log(format!("Item::input_typing(): Couldn't rename item {}; generated error {e}", self.name));
         }
     }
 
@@ -152,11 +154,21 @@ impl Item {
         }
     }
 
-    fn delete(&mut self, path: PathBuf) {
+    fn delete(&self, path: PathBuf) {
+        if self.is_dir { self.delete_dir(path); return; }
         if let Err(e) = fs::remove_file(path) {
             log(format!(
                 "Item::delete(): couldn't delete item {}; generated error {e}",
-                self.name
+                self.name,
+            ));
+        }
+    }
+
+    fn delete_dir(&self, path: PathBuf) {
+        if let Err(e) = fs::remove_dir(path) {
+            log(format!(
+                "Item::delete(): couldn't delete directory item {}; generated error {e}",
+                self.name,
             ));
         }
     }
