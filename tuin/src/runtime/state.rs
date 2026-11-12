@@ -50,10 +50,12 @@ where
             // build, render and draw the UI
             let render_start = Instant::now();
             let context = RenderContext::default();
-            let rendered: String = match self.build() {
+            let mut rendered: String = match self.build() {
                 Some(widget) => widget.render(context).into(),
                 None => break,
             };
+            log(format!("{rendered:#?}"));
+            rendered = rendered.replace("LINEBREAK", "");
             print!("{rendered}");
             let _ = io::stdout().flush();
 

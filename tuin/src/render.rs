@@ -14,8 +14,9 @@ impl Render {
     /// Construct a new `Render` with a position context and a `String`.
     pub fn new(value: String, context: RenderContext) -> Self {
         let mut lines = Vec::new();
+        
+        /*
         let mut width = 0;
-
         for line in value.split('\n') {
             let line = line.to_string();
 
@@ -31,10 +32,15 @@ impl Render {
 
             lines.push(line);
         }
+         */
+
+        for line in value.split('\n') {
+            lines.push(line.to_string());
+        }
 
         Self {
             lines,
-            width: width as u32,
+            width: block_width(&value) as u32,
             context,
         }
     }
@@ -62,20 +68,10 @@ impl From<Render> for String {
 
             if let Some(max_width) = value.context.max_width {
                 if line_length(line.clone()) > (max_width - 1) as usize {
-                    // store escapes while other characters are trimmed so that styling is preserved
-                    let mut escapes = String::new();
-                    while line.contains('\x1b') {
-                        escapes.push(line.pop().unwrap());
-                    }
-
                     while line_length(line.clone()) > (max_width - 3) as usize {
                         line.pop();
                     }
-                    line.push_str("...");
-
-                    while !escapes.is_empty() {
-                        line.push(escapes.pop().unwrap());
-                    }
+                    line.push_str("...\x1b[0m");
                 }
             }
 
@@ -121,37 +117,6 @@ impl Default for RenderContext {
     }
 }
 
-/// Get the line length after removing ANSI codes
-pub fn old_line_length(mut line: String) -> usize {
-    if line.starts_with("\x1b") {
-        loop {
-            // spaces are used to indent items, so they can be used as a marker of the end of an
-            // ansi code
-            while !(line.starts_with('H') || line.starts_with(' ') || line.starts_with('m')) {
-                line.remove(0);
-            }
-
-            if line.starts_with('H') || line.starts_with('m') {
-                line.remove(0);
-            }
-            if !line.starts_with('\x1b') {
-                break;
-            }
-        }
-    }
-
-    while line.contains('\x1b') {
-        line.pop();
-    }
-
-    let mut len = 0;
-    for char in line.chars() {
-        len += if char.is_ascii() { 1 } else { 2 };
-    }
-
-    len
-}
-
 pub fn line_length(line: String) -> usize {
     let mut len = 0;
 
@@ -165,4 +130,47 @@ pub fn line_length(line: String) -> usize {
     }
 
     len
+}
+
+/*
+fn split_lines(line: &String) -> Vec<String> {
+    let mut buffer = String::new();
+    let mut lines = Vec::new();
+
+    for character in line.chars() {
+        buffer.push(character);
+        if buffer.ends_with("H ") || buffer.ends_with("H\u{e5ff} ") || buffer.ends_with('\n') {
+            lines.push(buffer.clone());
+            buffer.clear();
+        }
+    }
+
+    lines.push(buffer);
+
+    lines
+}
+*/
+
+fn block_width(line: &String) -> usize {
+    let mut width = 0;
+
+    let mut good = false;
+    for line in line.split("LINEBREAK") {
+        for character in line.chars() {
+            if character != ' ' && character != 'H' && character != '\x1b' && character != '[' && character != ';' && !character.is_numeric() {
+                good = true;
+                break;
+            }
+        }
+
+        if good {
+            let length = line_length(line.to_string());
+            if length > width {
+                width = length;
+            }
+        }
+        good = false;
+    }
+
+    width
 }
