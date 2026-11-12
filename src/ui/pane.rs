@@ -111,8 +111,9 @@ impl Pane {
                 if let Ok(slice) = read(&*self.path)
                     && let Ok(text) = String::from_utf8(slice)
                 {
-                    for line in text.split('\n') {
-                        self.items.push(Item::new(line, false, true));
+                    for (index, line) in text.split('\n').enumerate() {
+                        let line = format!("{index}] {line}");
+                        self.items.push(Item::new(&line, false, true));
                         if line == hovered_name {
                             self.hovered_item_index = self.items.len() - 1;
                             should_set_index = false;
