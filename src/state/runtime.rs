@@ -8,6 +8,7 @@ impl Anthilus {
 
         raw_mode();
         let mut info = RuntimeInfo::new();
+        set_stdin_nonblocking();
 
         print!("\x1b[?25l\x1b[?1049h");
 

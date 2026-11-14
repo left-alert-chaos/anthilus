@@ -227,7 +227,7 @@ impl Anthilus {
             item.hovered = false;
         }
 
-        pane.typing_buffer = Some(TypingBuffer::new(TypingLocation::Goto));
+        pane.typing_buffer = Some(TypingBuffer::new(String::new(), TypingLocation::Goto));
         self.cursor_state = CursorState::Typing;
     }
 
@@ -237,7 +237,7 @@ impl Anthilus {
             item.hovered = false;
         }
 
-        pane.typing_buffer = Some(TypingBuffer::new(TypingLocation::Search));
+        pane.typing_buffer = Some(TypingBuffer::new(String::new(), TypingLocation::Search));
         self.cursor_state = CursorState::Typing;
     }
 }
@@ -274,9 +274,9 @@ pub struct TypingBuffer {
 }
 
 impl TypingBuffer {
-    pub fn new(location: TypingLocation) -> Self {
+    pub fn new(buffer: String, location: TypingLocation) -> Self {
         Self {
-            buffer: String::new(),
+            buffer,
             cursor: 0,
             location,
         }
@@ -286,7 +286,7 @@ impl TypingBuffer {
     pub fn take_input(&mut self, input: Input) -> Option<BufferInputResult> {
         match input {
             Input::Character(c) => self.buffer.push(c),
-            Input::Escape => return Some(BufferInputResult::Cancel),
+            Input::Escape => { log("Escaping buffer"); return Some(BufferInputResult::Cancel);}
             Input::Return => return Some(BufferInputResult::Complete(self.buffer.clone())),
             Input::Backspace => {
                 self.buffer.pop();
@@ -303,6 +303,10 @@ impl TypingBuffer {
 
     pub fn location(&self) -> TypingLocation {
         self.location
+    }
+
+    pub fn display_buffer(&self) -> String {
+        format!("{}\x1b[7m \x1b[0m", self.buffer)
     }
 }
 

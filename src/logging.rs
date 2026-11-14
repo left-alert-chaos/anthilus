@@ -6,6 +6,7 @@ pub fn log(s: impl ToString) {
     
     let mut text = String::from_utf8(read(&path).unwrap_or(Vec::new())).unwrap_or(String::new());
     text.push_str(&s.to_string());
+    text.push('\n');
 
     let _ = write(&path, text);
 }
@@ -17,7 +18,7 @@ pub fn print_logs() {
     let text = match read(&path) {
         Ok(bytes) => String::from_utf8(bytes).unwrap_or(String::new()),
         Err(_) => {
-            write(&path, "");
+            let _ = write(&path, "");
             String::new()
         }
     };

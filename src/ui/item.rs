@@ -35,7 +35,7 @@ impl Item {
 
     pub fn render(&self, pane_is_hovered: bool, context: &mut RenderContext) -> Render {
         let mut text = if let Some(buffer) = &self.typing_buffer {
-            buffer.buffer()
+            format!("{} -> {}", self.name, buffer.display_buffer())
         } else {
             self.name()
         };
@@ -104,6 +104,7 @@ impl Item {
         self.typing_buffer = None;
         match result {
             BufferInputResult::Cancel => {
+                log("item::Item::input_typing(): Canceling buffer");
                 Some(UpdateItemResult::SetCursorState(CursorState::Hovering))
             }
             BufferInputResult::Complete(string) => {
@@ -176,6 +177,6 @@ impl Item {
     }
 
     fn start_rename(&mut self) {
-        self.typing_buffer = Some(TypingBuffer::new(TypingLocation::Rename));
+        self.typing_buffer = Some(TypingBuffer::new(self.name.clone(), TypingLocation::Rename));
     }
 }
