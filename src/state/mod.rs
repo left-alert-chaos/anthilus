@@ -36,6 +36,7 @@ impl Anthilus {
         }
 
         let mut context = RenderContext::new();
+        context.width /= self.panes.len() as u32;
 
         let mut buffer = String::new();
         for pane in &self.panes {

@@ -291,7 +291,7 @@ impl Pane {
     fn title(&self, context: &RenderContext) -> String {
         let text = if let Some(buffer) = &self.typing_buffer {
             if buffer.location() == TypingLocation::Goto {
-                format!("Go to: \x1b[1;31m{}", buffer.buffer())
+                format!("Go to: \x1b[1;31m{}", buffer.display_buffer())
             } else {
                 format!(
                     "{}\n\nFind: \x1b[1;31m{}\x1b[0m",

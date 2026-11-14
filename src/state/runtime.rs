@@ -13,7 +13,6 @@ impl Anthilus {
         print!("\x1b[?25l\x1b[?1049h");
 
         loop {
-            info.frame += 1;
             print!("\x1b[H\x1b[2J\x1b[3J");
 
             if let Some(text) = self.render() {
@@ -50,14 +49,12 @@ impl Anthilus {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RuntimeInfo {
     last_instant: Instant,
-    frame: u64,
 }
 
 impl RuntimeInfo {
     fn new() -> Self {
         Self {
             last_instant: Instant::now(),
-            frame: 0,
         }
     }
 
@@ -69,11 +66,6 @@ impl RuntimeInfo {
     /// Reset the clock
     pub fn reset_clock(&mut self) {
         self.last_instant = Instant::now();
-    }
-
-    /// Get the numbered frame we're currently on. The first frame is 1.
-    pub fn frame(&self) -> u64 {
-        self.frame
     }
 }
 

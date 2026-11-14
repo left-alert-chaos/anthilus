@@ -40,6 +40,11 @@ impl Item {
             self.name()
         };
 
+        if text.len() > context.width as usize {
+            while text.len() > context.width as usize - 3 { text.pop(); }
+            text.push_str("...");
+        }
+
         if !self.is_preview_line {
             if self.is_dir {
                 text.insert_str(0, " ");
