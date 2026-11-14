@@ -2,6 +2,7 @@ use crate::{
     logging::log,
     state::{BufferInputResult, CursorState, TypingBuffer, TypingLocation, UpdateItemResult},
     render::*,
+    state::input::Input,
 };
 
 use std::{fs, path::PathBuf};

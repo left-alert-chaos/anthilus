@@ -4,6 +4,7 @@ use input::Input;
 
 use crate::logging::log;
 use crate::ui::*;
+use crate::render::RenderContext;
 
 use std::{env::current_dir, path::PathBuf};
 
@@ -27,20 +28,22 @@ pub struct Anthilus {
     cursor_state: CursorState,
 }
 
-impl State<Message> for Anthilus {
-    fn build(&self) -> Option<Widget> {
+impl Anthilus {
+    pub fn render(&self) -> Option<String> {
         if self.quit {
             return None;
         }
 
-        let mut root = row![];
+        let mut context = RenderContext::new();
+
+        let mut buffer = String::new();
         for pane in &self.panes {
-            root.add_child(pane.build());
+            buffer = format!("{buffer}{}", pane.render(&mut context).text);
         }
-        Some(root)
+        Some(buffer)
     }
 
-    fn update(&mut self, event: Message) {
+    pub fn update(&mut self, event: Message) {
         match event {
             Message::Input(input) => self.update_input(input),
             Message::Repopulate => {
@@ -50,9 +53,7 @@ impl State<Message> for Anthilus {
             }
         }
     }
-}
 
-impl Anthilus {
     pub fn new() -> Self {
         Self {
             panes: vec![Pane::new(current_dir().unwrap())],
