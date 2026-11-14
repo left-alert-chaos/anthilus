@@ -39,7 +39,10 @@ impl Anthilus {
 
         let mut buffer = String::new();
         for pane in &self.panes {
-            buffer = format!("{buffer}{}", pane.render(&mut context).text);
+            let render = pane.render(&mut context);
+            buffer = format!("{buffer}{}", render.text);
+            context.x += render.width as u32;
+            context.y = 1;
         }
         Some(buffer)
     }

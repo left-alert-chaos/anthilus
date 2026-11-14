@@ -52,15 +52,16 @@ impl Item {
             text.insert_str(0, "\x1b[1;31m ");
         }
         text.push_str("\x1b[0m");
+        text.insert_str(0, format!("\x1b[{};{}H", context.y, context.x).as_str());
 
         if let Some(expanded_index) = self.expanded_index {
             for (index, name) in DROPDOWN_ITEM_NAMES.iter().enumerate() {
                 let mut name = name.to_string();
                 context.y += 1;
                 if expanded_index > 0 && expanded_index - 1 == index {
-                    name.push_str("\x1b[1;31m ");
+                    name.insert_str(0, "\x1b[1;31m ");
                 }
-                text = format!("{text}\n\x1b[{};{}H  {name}", context.y, context.x);
+                text = format!("{text}\n\x1b[{};{}H  {name}\x1b[0m", context.y, context.x);
             }
         }
 
