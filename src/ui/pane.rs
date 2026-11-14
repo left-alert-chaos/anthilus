@@ -1,7 +1,5 @@
-use tuin::*;
-
 use super::item::Item;
-use crate::{logging::log, state::*, ui::DROPDOWN_ITEM_NAMES};
+use crate::{logging::log, state::*, ui::DROPDOWN_ITEM_NAMES, render::*};
 
 use std::{
     fs::{metadata, read, read_dir},
@@ -54,8 +52,9 @@ impl Pane {
         new
     }
 
+    /*
     /// Build a column of widgets to represent this Pane.
-    pub fn build(&self) -> Widget {
+    pub fn build(&self) -> Render {
         let mut column = col![Widget::Label(self.title()), Widget::Pad];
 
         let mut last_row = self.first_row + height() - self.title_height();
@@ -68,6 +67,22 @@ impl Pane {
         }
 
         column
+    }
+    */
+
+    pub fn render(&self, context: &mut RenderContext) -> Render {
+        let mut buffer = self.title();
+
+        let mut last_row = self.first_row + height() - self.title_height();
+        if last_row > self.items.len() {
+            last_row = self.items.len();
+        }
+
+        for item in &self.items[self.first_row..last_row] {
+            buffer.push_str(item.render(self.hovered, context).text.as_str());
+        }
+
+        Render::new(buffer)
     }
 
     /// Remove existing items and replace with up-to-date ones.

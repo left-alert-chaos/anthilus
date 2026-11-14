@@ -1,4 +1,6 @@
-use tuin::*;
+pub mod input;
+
+use input::Input;
 
 use crate::logging::log;
 use crate::ui::*;
@@ -16,8 +18,6 @@ impl From<Input> for Message {
         Self::Input(value)
     }
 }
-
-impl Event for Message {}
 
 #[derive(Debug)]
 pub struct Anthilus {
