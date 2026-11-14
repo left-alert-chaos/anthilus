@@ -1,4 +1,5 @@
 pub mod input;
+pub mod runtime;
 
 use input::Input;
 
@@ -307,13 +308,4 @@ impl TypingBuffer {
 pub enum BufferInputResult {
     Complete(String),
     Cancel,
-}
-
-pub fn repopulate_check(info: &mut RuntimeInfo) -> Option<Message> {
-    if info.elapsed().as_secs_f64() > 0.25 {
-        info.reset_clock();
-        Some(Message::Repopulate)
-    } else {
-        None
-    }
 }
