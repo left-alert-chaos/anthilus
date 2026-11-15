@@ -5,7 +5,7 @@ https://github.com/user-attachments/assets/19121e50-6e99-4b5c-8b9a-5a001078fd03
 Anthilus is a lightweight file manager for your Linux terminal!
 
 It can display directories, preview files, show file types, rename/move files, and delete things!
-It uses no external frameworks outsite of `cc` for compilation, with all the TUI rendering logic being written independently.
+It uses no external dependencies outside of `cc` for compilation, with all the TUI rendering logic being written independently.
 
 # Install
 You need Cargo to download Anthilus. There are directions [here](https://doc.rust-lang.org/cargo/getting-started/installation.html). For most Linux users, it's just this command:
