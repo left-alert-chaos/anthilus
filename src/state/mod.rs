@@ -1,7 +1,11 @@
-use tuin::*;
+pub mod input;
+pub mod runtime;
+
+use input::Input;
 
 use crate::logging::log;
 use crate::ui::*;
+use crate::render::RenderContext;
 
 use std::{env::current_dir, path::PathBuf};
 
@@ -17,8 +21,6 @@ impl From<Input> for Message {
     }
 }
 
-impl Event for Message {}
-
 #[derive(Debug)]
 pub struct Anthilus {
     panes: Vec<Pane>,
@@ -27,20 +29,26 @@ pub struct Anthilus {
     cursor_state: CursorState,
 }
 
-impl State<Message> for Anthilus {
-    fn build(&self) -> Option<Widget> {
+impl Anthilus {
+    pub fn render(&self) -> Option<String> {
         if self.quit {
             return None;
         }
 
-        let mut root = row![];
+        let mut context = RenderContext::new();
+        context.width /= self.panes.len() as u32;
+
+        let mut buffer = String::new();
         for pane in &self.panes {
-            root.add_child(pane.build());
+            let render = pane.render(&mut context);
+            buffer = format!("{buffer}{}", render.text);
+            context.x += render.width as u32;
+            context.y = 1;
         }
-        Some(root)
+        Some(buffer)
     }
 
-    fn update(&mut self, event: Message) {
+    pub fn update(&mut self, event: Message) {
         match event {
             Message::Input(input) => self.update_input(input),
             Message::Repopulate => {
@@ -50,9 +58,7 @@ impl State<Message> for Anthilus {
             }
         }
     }
-}
 
-impl Anthilus {
     pub fn new() -> Self {
         Self {
             panes: vec![Pane::new(current_dir().unwrap())],
@@ -222,7 +228,7 @@ impl Anthilus {
             item.hovered = false;
         }
 
-        pane.typing_buffer = Some(TypingBuffer::new(TypingLocation::Goto));
+        pane.typing_buffer = Some(TypingBuffer::new(String::new(), TypingLocation::Goto));
         self.cursor_state = CursorState::Typing;
     }
 
@@ -232,7 +238,7 @@ impl Anthilus {
             item.hovered = false;
         }
 
-        pane.typing_buffer = Some(TypingBuffer::new(TypingLocation::Search));
+        pane.typing_buffer = Some(TypingBuffer::new(String::new(), TypingLocation::Search));
         self.cursor_state = CursorState::Typing;
     }
 }
@@ -269,9 +275,9 @@ pub struct TypingBuffer {
 }
 
 impl TypingBuffer {
-    pub fn new(location: TypingLocation) -> Self {
+    pub fn new(buffer: String, location: TypingLocation) -> Self {
         Self {
-            buffer: String::new(),
+            buffer,
             cursor: 0,
             location,
         }
@@ -281,7 +287,7 @@ impl TypingBuffer {
     pub fn take_input(&mut self, input: Input) -> Option<BufferInputResult> {
         match input {
             Input::Character(c) => self.buffer.push(c),
-            Input::Escape => return Some(BufferInputResult::Cancel),
+            Input::Escape => { log("Escaping buffer"); return Some(BufferInputResult::Cancel);}
             Input::Return => return Some(BufferInputResult::Complete(self.buffer.clone())),
             Input::Backspace => {
                 self.buffer.pop();
@@ -299,6 +305,10 @@ impl TypingBuffer {
     pub fn location(&self) -> TypingLocation {
         self.location
     }
+
+    pub fn display_buffer(&self) -> String {
+        format!("{}\x1b[7m \x1b[0m", self.buffer)
+    }
 }
 
 /// What to do, if anything, after a `TypingBuffer` takes input
@@ -306,13 +316,4 @@ impl TypingBuffer {
 pub enum BufferInputResult {
     Complete(String),
     Cancel,
-}
-
-pub fn repopulate_check(info: &mut RuntimeInfo) -> Option<Message> {
-    if info.elapsed().as_secs_f64() > 0.25 {
-        info.reset_clock();
-        Some(Message::Repopulate)
-    } else {
-        None
-    }
 }

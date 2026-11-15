@@ -1,8 +1,9 @@
 mod logging;
 mod state;
 mod ui;
-
-use tuin::State;
+mod render;
+mod size;
+mod username;
 
 use std::{env::set_current_dir, path::PathBuf};
 
@@ -23,10 +24,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     if log {
-        logging::print_logs()
+        logging::print_logs();
+        Ok(())
     } else {
         let mut state = state::Anthilus::new();
-        state.event_loop(Some(state::repopulate_check));
+        state.event_loop();
         Ok(())
     }
 }

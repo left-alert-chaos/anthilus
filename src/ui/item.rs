@@ -1,8 +1,8 @@
-use tuin::*;
-
 use crate::{
     logging::log,
     state::{BufferInputResult, CursorState, TypingBuffer, TypingLocation, UpdateItemResult},
+    render::*,
+    state::input::Input,
 };
 
 use std::{fs, path::PathBuf};
@@ -33,12 +33,17 @@ impl Item {
         }
     }
 
-    pub fn build(&self, pane_is_hovered: bool) -> Widget {
+    pub fn render(&self, pane_is_hovered: bool, context: &mut RenderContext) -> Render {
         let mut text = if let Some(buffer) = &self.typing_buffer {
-            buffer.buffer()
+            format!("{} -> {}", self.name, buffer.display_buffer())
         } else {
             self.name()
         };
+
+        if text.len() > context.width as usize {
+            while text.len() > context.width as usize - 3 { text.pop(); }
+            text.push_str("...");
+        }
 
         if !self.is_preview_line {
             if self.is_dir {
@@ -52,26 +57,20 @@ impl Item {
             text.insert_str(0, "\x1b[1;31m ");
         }
         text.push_str("\x1b[0m");
+        text.insert_str(0, format!("\x1b[{};{}H", context.y, context.x).as_str());
 
-        let mut main = Widget::Label(text);
-
-        if let Some(index) = self.expanded_index {
-            main = col![main];
-
-            for name in DROPDOWN_ITEM_NAMES {
-                main.add_child(Widget::Label(format!("  {name}")));
-            }
-
-            if let Some(Widget::Label(string)) = main.child(index)
-                && index != 0
-                && pane_is_hovered
-            {
-                string.insert_str(0, "\x1b[1;31m ");
-                string.push_str("\x1b[0m");
+        if let Some(expanded_index) = self.expanded_index {
+            for (index, name) in DROPDOWN_ITEM_NAMES.iter().enumerate() {
+                let mut name = name.to_string();
+                context.y += 1;
+                if expanded_index > 0 && expanded_index - 1 == index && pane_is_hovered {
+                    name.insert_str(0, "\x1b[1;31m ");
+                }
+                text = format!("{text}\n\x1b[{};{}H  {name}\x1b[0m", context.y, context.x);
             }
         }
 
-        main
+        Render::new(text)
     }
 
     pub fn name(&self) -> String {
@@ -110,6 +109,7 @@ impl Item {
         self.typing_buffer = None;
         match result {
             BufferInputResult::Cancel => {
+                log("item::Item::input_typing(): Canceling buffer");
                 Some(UpdateItemResult::SetCursorState(CursorState::Hovering))
             }
             BufferInputResult::Complete(string) => {
@@ -182,6 +182,6 @@ impl Item {
     }
 
     fn start_rename(&mut self) {
-        self.typing_buffer = Some(TypingBuffer::new(TypingLocation::Rename));
+        self.typing_buffer = Some(TypingBuffer::new(self.name.clone(), TypingLocation::Rename));
     }
 }

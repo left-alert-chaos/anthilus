@@ -1,11 +1,27 @@
-use std::error::Error;
-
-use tuin::{print_program_logs, program_log};
+use std::fs::{read, write};
 
 pub fn log(s: impl ToString) {
-    let _ = program_log(s, "anthilus");
+    let username = crate::username::username();
+    let path = format!("/home/{username}/.cache/anthilus/anthilus.log");
+    
+    let mut text = String::from_utf8(read(&path).unwrap_or(Vec::new())).unwrap_or(String::new());
+    text.push_str(&s.to_string());
+    text.push('\n');
+
+    let _ = write(&path, text);
 }
 
-pub fn print_logs() -> Result<(), Box<dyn Error>> {
-    print_program_logs("anthilus")
+pub fn print_logs() {
+    let username = crate::username::username();
+    let path = format!("/home/{username}/.cache/anthilus/anthilus.log");
+
+    let text = match read(&path) {
+        Ok(bytes) => String::from_utf8(bytes).unwrap_or(String::new()),
+        Err(_) => {
+            let _ = write(&path, "");
+            String::new()
+        }
+    };
+
+    println!("{text}");
 }

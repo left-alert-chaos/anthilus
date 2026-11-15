@@ -1,7 +1,5 @@
-use tuin::*;
-
 use super::item::Item;
-use crate::{logging::log, state::*, ui::DROPDOWN_ITEM_NAMES};
+use crate::{logging::log, state::*, ui::DROPDOWN_ITEM_NAMES, render::*, size::height, state::input::Input};
 
 use std::{
     fs::{metadata, read, read_dir},
@@ -54,20 +52,22 @@ impl Pane {
         new
     }
 
-    /// Build a column of widgets to represent this Pane.
-    pub fn build(&self) -> Widget {
-        let mut column = col![Widget::Label(self.title()), Widget::Pad];
+    pub fn render(&self, context: &mut RenderContext) -> Render {
+        let mut buffer = format!("\x1b[1;{}H{}", context.x, self.title(&*context).as_str());
 
         let mut last_row = self.first_row + height() - self.title_height();
         if last_row > self.items.len() {
             last_row = self.items.len();
         }
 
+        context.y += self.title_height() as u32;
+
         for item in &self.items[self.first_row..last_row] {
-            column.add_child(item.build(self.hovered));
+            buffer.push_str(item.render(self.hovered, context).text.as_str());
+            context.y += 1;
         }
 
-        column
+        Render::new(buffer)
     }
 
     /// Remove existing items and replace with up-to-date ones.
@@ -288,15 +288,15 @@ impl Pane {
         }
     }
 
-    fn title(&self) -> String {
-        if let Some(buffer) = &self.typing_buffer {
+    fn title(&self, context: &RenderContext) -> String {
+        let text = if let Some(buffer) = &self.typing_buffer {
             if buffer.location() == TypingLocation::Goto {
-                format!("Go to: \x1b[1;31m{}", buffer.buffer())
+                format!("Go to: \x1b[1;31m{}", buffer.display_buffer())
             } else {
                 format!(
                     "{}\n\nFind: \x1b[1;31m{}\x1b[0m",
                     self.display_path(),
-                    buffer.buffer()
+                    buffer.display_buffer()
                 )
             }
         } else {
@@ -306,11 +306,17 @@ impl Pane {
             } else {
                 path
             }
+        };
+
+        if context.x > 1 {
+            text.replace('\n', format!("\n\x1b[{}C", context.x).as_str())
+        } else {
+            text
         }
     }
 
     fn title_height(&self) -> usize {
-        self.title().split('\n').collect::<Vec<_>>().len() + 1
+        self.title(&RenderContext::new()).split('\n').collect::<Vec<_>>().len() + 1
     }
 
     fn display_path(&self) -> String {
