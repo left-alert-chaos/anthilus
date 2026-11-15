@@ -55,10 +55,13 @@ impl Pane {
     pub fn render(&self, context: &mut RenderContext) -> Render {
         let mut buffer = format!("\x1b[1;{}H{}", context.x, self.title(&*context).as_str());
 
-        let mut last_row = self.first_row + height() - self.title_height();
+        let mut last_row = self.first_row + height() - self.title_height() - 2;
         if last_row > self.items.len() {
             last_row = self.items.len();
+        } /*else if last_row < self.items.len() - 1 {
+            last_row -= 1;
         }
+          */
 
         context.y += self.title_height() as u32;
 
@@ -66,6 +69,8 @@ impl Pane {
             buffer.push_str(item.render(self.hovered, context).text.as_str());
             context.y += 1;
         }
+
+        buffer.push_str(format!("\x1b[{};{}H[{}/{}]", context.y + 1, context.x, self.hovered_item_index + 1, self.items.len()).as_str());
 
         Render::new(buffer)
     }
@@ -191,7 +196,7 @@ impl Pane {
         }
 
         if !self.items.is_empty() && self.hovered_item_index < self.items.len() - 1 {
-            if self.first_row + height() - self.title_height() <= self.hovered_item_index + 1 {
+            if self.first_row + height() - self.title_height() - 1 <= self.hovered_item_index + 2 {
                 self.first_row += 1;
             }
             self.hovered_item().unwrap().hovered = false;
