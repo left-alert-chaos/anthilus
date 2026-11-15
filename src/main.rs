@@ -1,8 +1,8 @@
 mod logging;
-mod state;
-mod ui;
 mod render;
 mod size;
+mod state;
+mod ui;
 mod username;
 
 use std::{env::set_current_dir, path::PathBuf};

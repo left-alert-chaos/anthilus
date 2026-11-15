@@ -1,8 +1,8 @@
 use crate::{
     logging::log,
-    state::{BufferInputResult, CursorState, TypingBuffer, TypingLocation, UpdateItemResult},
     render::*,
     state::input::Input,
+    state::{BufferInputResult, CursorState, TypingBuffer, TypingLocation, UpdateItemResult},
 };
 
 use std::{fs, path::PathBuf};
@@ -46,7 +46,9 @@ impl Item {
         };
 
         if text.len() > context.width as usize {
-            while text.len() > context.width as usize - 3 { text.pop(); }
+            while text.len() > context.width as usize - 3 {
+                text.pop();
+            }
             text.push_str("...");
         }
 
@@ -187,7 +189,7 @@ fn get_icon(name: &String) -> char {
     let Some(extension) = name.split(".").last() else {
         return '';
     };
-    
+
     match extension {
         "py" => '',
         "rs" => '',

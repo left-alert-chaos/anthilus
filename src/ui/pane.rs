@@ -1,5 +1,7 @@
 use super::item::Item;
-use crate::{logging::log, state::*, ui::DROPDOWN_ITEM_NAMES, render::*, size::height, state::input::Input};
+use crate::{
+    logging::log, render::*, size::height, state::input::Input, state::*, ui::DROPDOWN_ITEM_NAMES,
+};
 
 use std::{
     fs::{metadata, read, read_dir},
@@ -58,10 +60,7 @@ impl Pane {
         let mut last_row = self.first_row + height() - self.title_height() - 2;
         if last_row > self.items.len() {
             last_row = self.items.len();
-        } /*else if last_row < self.items.len() - 1 {
-            last_row -= 1;
         }
-          */
 
         context.y += self.title_height() as u32;
 
@@ -70,7 +69,16 @@ impl Pane {
             context.y += 1;
         }
 
-        buffer.push_str(format!("\x1b[{};{}H[{}/{}]", context.y + 1, context.x, self.hovered_item_index + 1, self.items.len()).as_str());
+        buffer.push_str(
+            format!(
+                "\x1b[{};{}H[{}/{}]",
+                context.y + 1,
+                context.x,
+                self.hovered_item_index + 1,
+                self.items.len()
+            )
+            .as_str(),
+        );
 
         Render::new(buffer)
     }
@@ -105,7 +113,11 @@ impl Pane {
         self.items.clear();
         let mut should_set_index = true;
 
-        self.pane_type = if self.path.is_dir() { PaneType::Directory } else { PaneType::Preview };
+        self.pane_type = if self.path.is_dir() {
+            PaneType::Directory
+        } else {
+            PaneType::Preview
+        };
 
         match self.pane_type {
             // read file and display lines as items
@@ -131,7 +143,9 @@ impl Pane {
                         index += 1;
 
                         let mut number = format!("{index}] ");
-                        while number.len() < gutter { number.insert(0, ' '); }
+                        while number.len() < gutter {
+                            number.insert(0, ' ');
+                        }
                         let line = format!("{number}{line}");
 
                         self.items.push(Item::new(&line, false, true));
@@ -326,14 +340,18 @@ impl Pane {
         };
 
         if context.x > 1 {
-            text.replace('\n', format!("\n\x1b[{}C", context.x).as_str())
+            text.replace('\n', format!("\n\x1b[{}C", context.x - 1).as_str())
         } else {
             text
         }
     }
 
     fn title_height(&self) -> usize {
-        self.title(&RenderContext::new()).split('\n').collect::<Vec<_>>().len() + 1
+        self.title(&RenderContext::new())
+            .split('\n')
+            .collect::<Vec<_>>()
+            .len()
+            + 1
     }
 
     fn display_path(&self) -> String {

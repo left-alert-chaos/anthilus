@@ -4,8 +4,8 @@ pub mod runtime;
 use input::Input;
 
 use crate::logging::log;
-use crate::ui::*;
 use crate::render::RenderContext;
+use crate::ui::*;
 
 use std::{env::current_dir, path::PathBuf, sync::LazyLock};
 
@@ -285,7 +285,10 @@ impl TypingBuffer {
     pub fn take_input(&mut self, input: Input) -> Option<BufferInputResult> {
         match input {
             Input::Character(c) => self.buffer.push(c),
-            Input::Escape => { log("Escaping buffer"); return Some(BufferInputResult::Cancel);}
+            Input::Escape => {
+                log("Escaping buffer");
+                return Some(BufferInputResult::Cancel);
+            }
             Input::Return => return Some(BufferInputResult::Complete(self.buffer.clone())),
             Input::Backspace => {
                 self.buffer.pop();

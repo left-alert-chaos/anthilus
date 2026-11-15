@@ -48,7 +48,9 @@ pub fn line_length(line: String) -> usize {
     let mut len = 0;
 
     for segment in line.split("\x1b[") {
-        if segment.len() < 3 { continue; }
+        if segment.len() < 3 {
+            continue;
+        }
 
         let segment_len = segment.len();
         if segment_len > len {

@@ -1,6 +1,15 @@
 use super::Anthilus;
-use crate::{logging::log, state::{input::{raw_mode, exit_raw_mode, set_stdin_nonblocking, Input}, Message}};
-use std::{time::{Duration, Instant}, io::{stdout, Write}};
+use crate::{
+    logging::log,
+    state::{
+        Message,
+        input::{Input, exit_raw_mode, raw_mode, set_stdin_nonblocking},
+    },
+};
+use std::{
+    io::{Write, stdout},
+    time::{Duration, Instant},
+};
 
 impl Anthilus {
     pub fn event_loop(&mut self) {
@@ -25,8 +34,7 @@ impl Anthilus {
             let input = match loop {
                 if let Ok(event) = Input::get() {
                     break Some(event);
-                } else if let Some(event) = repopulate_check(&mut info)
-                {
+                } else if let Some(event) = repopulate_check(&mut info) {
                     self.update(event);
                     break None;
                 }
@@ -43,7 +51,7 @@ impl Anthilus {
 
         log("State<T>::event_loop(): Ending event loop");
         exit_raw_mode();
-        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
