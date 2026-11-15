@@ -31,4 +31,4 @@ Anthilus can be run without any flags or arguments, and will start in the curren
 Currently, Anthilus is only tested on Linux. It is probably not Windows-compatible, but _might_ work with macOS.
 
 # AI
-No artificial intelligence was knowinly used in the development of Anthilus. Please do not direct agents to contribute.
+No artificial intelligence was knowingly used in the development of Anthilus. Please do not direct agents to contribute.
