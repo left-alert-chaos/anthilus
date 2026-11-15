@@ -7,7 +7,6 @@ description = "Anthilus is a lightweight file manager for you Linux terminal!"
 keywords = ["file", "file manager", "manager", "files", "tui"]
 readme = "README.md"
 repository = "https://github.com/left-alert-chaos/anthilus"
-homepage = "https://github.com/left-alert-chaos/anthilus"
 exclude = [
 	"directory_generator.py",
 	"files_to_read",
