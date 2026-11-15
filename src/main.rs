@@ -10,11 +10,13 @@ use std::{env::set_current_dir, path::PathBuf};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     logging::log("starting");
 
-    let mut log = false;
     for arg in std::env::args() {
         if arg.as_str() == "--log" {
-            log = true;
-            continue;
+            logging::print_logs();
+            return Ok(());
+        } else if arg.as_str() =="--help" {
+            help();
+            return Ok(());
         }
 
         let path = PathBuf::from(arg);
@@ -23,12 +25,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    if log {
-        logging::print_logs();
-        Ok(())
-    } else {
-        let mut state = state::Anthilus::new();
-        state.event_loop();
-        Ok(())
-    }
+
+    let mut state = state::Anthilus::new();
+    state.event_loop();
+    Ok(())
+}
+
+fn help() {
+    println!("Anthilus
+
+Anthilus is a lightweight file manager for your Linux terminal!
+
+Usage: anthilus [dir] [--log] [--help]
+Flags:
+    --log: Print logs and exit. Logs are located at ~/.cache/anthilus/anthilus.log
+    --help: Print this help text and exit.")
 }
