@@ -32,7 +32,7 @@ pub struct Anthilus {
 }
 
 impl Anthilus {
-    pub fn render(&self) -> Option<String> {
+    pub fn render(&mut self) -> Option<String> {
         if self.quit {
             return None;
         }
@@ -41,7 +41,7 @@ impl Anthilus {
         context.width /= self.panes.len() as u32;
 
         let mut buffer = String::new();
-        for pane in &self.panes {
+        for pane in &mut self.panes {
             let render = pane.render(&mut context);
             buffer = format!("{buffer}{}", render.text);
             context.x += render.width as u32;
@@ -159,11 +159,10 @@ impl Anthilus {
         if let Some(item) = pane.hovered_item()
         {
             let res = item.select(path);
-            let expanded_index = item.expanded_index;
 
-            if let Some(index) = expanded_index && index + item_index + 2 > last_row {
+            if item.expanded_index.is_some() && DROPDOWN_ITEM_NAMES.len() + item_index + 2 > last_row {
                 log("increasing first row");
-                pane.first_row += DROPDOWN_ITEM_NAMES.len() - index - 1;
+                pane.first_row += DROPDOWN_ITEM_NAMES.len();
             }
 
             if let Some(result) = res {

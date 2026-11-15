@@ -54,7 +54,7 @@ impl Pane {
         new
     }
 
-    pub fn render(&self, context: &mut RenderContext) -> Render {
+    pub fn render(&mut self, context: &mut RenderContext) -> Render {
         let mut buffer = format!("\x1b[1;{}H{}", context.x, self.title(&*context).as_str());
 
         let last_row = self.last_row();
@@ -80,10 +80,13 @@ impl Pane {
         Render::new(buffer)
     }
 
-    pub fn last_row(&self) -> usize {
+    pub fn last_row(&mut self) -> usize {
         let mut last_row = self.first_row + height() - self.title_height() - 2;
         if last_row > self.items.len() {
             last_row = self.items.len();
+        }
+        if let Some(item) = self.hovered_item() && item.expanded_index.is_some() {
+            last_row -= DROPDOWN_ITEM_NAMES.len();
         }
 
         last_row
