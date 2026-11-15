@@ -1,4 +1,6 @@
-![A TUI file manager used to explore its own source code](demo.mp4)
+<video>
+    <source src="demo.mp4" type="video/mp4">
+</video>
 
 # Anthilus
 Anthilus is a lightweight file manager for your Linux terminal!
