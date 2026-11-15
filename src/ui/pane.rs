@@ -95,10 +95,7 @@ impl Pane {
 
         // store current item in case the same file still exists, to be able to keep context menus
         // open
-        let hovered_item = match self.hovered_item() {
-            Some(item) => Some(item.clone()),
-            None => None,
-        };
+        let hovered_item = self.hovered_item().map(|i| i.clone());
 
         self.items.clear();
         let mut should_set_index = true;
@@ -126,24 +123,22 @@ impl Pane {
                     return;
                 };
 
-                for file in files {
-                    if let Ok(entry) = file {
-                        let name = format_path(entry.path());
+                for entry in files.flatten() {
+                    let name = format_path(entry.path());
 
-                        // check if it's the currently hovered Item
-                        if let Some(hovered) = &hovered_item
-                            && hovered.name() == name
-                        {
-                            self.items.push(hovered.clone());
-                        } else {
-                            self.items
-                                .push(Item::new(&name, entry.path().is_dir(), false));
-                        }
+                    // check if it's the currently hovered Item
+                    if let Some(hovered) = &hovered_item
+                        && hovered.name() == name
+                    {
+                        self.items.push(hovered.clone());
+                    } else {
+                        self.items
+                            .push(Item::new(&name, entry.path().is_dir(), false));
+                    }
 
-                        if name == hovered_name {
-                            self.hovered_item_index = self.items.len() - 1;
-                            should_set_index = false;
-                        }
+                    if name == hovered_name {
+                        self.hovered_item_index = self.items.len() - 1;
+                        should_set_index = false;
                     }
                 }
             }
@@ -228,9 +223,7 @@ impl Pane {
 
     pub fn update_typing(&mut self, input: Input) -> Option<UpdateItemResult> {
         if let Some(buffer) = &mut self.typing_buffer {
-            let Some(result) = buffer.take_input(input) else {
-                return None;
-            };
+            let result = buffer.take_input(input)?;
             match result {
                 BufferInputResult::Cancel => {
                     self.typing_buffer = None;
@@ -375,7 +368,6 @@ fn format_path(path: PathBuf) -> String {
     path.into_string()
         .unwrap_or(String::from("[couldn't decode name]"))
         .split("/")
-        .into_iter()
         .last()
         .unwrap_or("[couldn't decode name]")
         .to_string()

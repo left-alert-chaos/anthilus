@@ -53,7 +53,7 @@ impl Input {
     pub fn get() -> io::Result<Self> {
         let mut stdin = io::stdin();
         let mut buffer = [0];
-        stdin.read(&mut buffer)?;
+        stdin.read_exact(&mut buffer)?;
 
         let character = buffer[0] as char;
 
@@ -70,7 +70,7 @@ impl Input {
         let mut stdin = io::stdin();
 
         let mut buffer = [0, 0];
-        if let Err(e) = stdin.read(&mut buffer) {
+        if let Err(e) = stdin.read_exact(&mut buffer) {
             crate::logging::log(format!(
                 "Couldn't read next character because {e}. Returning Input::Escape"
             ));
@@ -79,7 +79,7 @@ impl Input {
 
         let sequence = match String::from_utf8(buffer.to_vec()) {
             Ok(seq) => seq,
-            Err(e) => return Err(io::Error::new(io::ErrorKind::Other, e)),
+            Err(e) => return Err(io::Error::other(e)),
         };
 
         Ok(match sequence.as_str() {

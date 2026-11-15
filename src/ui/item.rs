@@ -24,7 +24,7 @@ impl Item {
     pub fn new(name: impl Into<String>, is_dir: bool, is_preview_line: bool) -> Self {
         let name = name.into();
         Self {
-            name: name.into(),
+            name,
             expanded_index: None,
             hovered: false,
             typing_buffer: None,
@@ -103,9 +103,7 @@ impl Item {
             return None;
         };
 
-        let Some(result) = buffer.take_input(input) else {
-            return None;
-        };
+        let result = buffer.take_input(input)?;
         self.typing_buffer = None;
         match result {
             BufferInputResult::Cancel => {
@@ -133,9 +131,7 @@ impl Item {
     }
 
     fn select_dropdown(&mut self, path: PathBuf) -> Option<UpdateItemResult> {
-        let Some(mut index) = self.expanded_index else {
-            return None;
-        };
+        let mut index = self.expanded_index?;
         index -= 1;
 
         match DROPDOWN_ITEM_NAMES[index] {

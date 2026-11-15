@@ -7,7 +7,9 @@ use crate::logging::log;
 use crate::ui::*;
 use crate::render::RenderContext;
 
-use std::{env::current_dir, path::PathBuf};
+use std::{env::current_dir, path::PathBuf, sync::LazyLock};
+
+static CURRENTDIR: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from("."));
 
 #[derive(Clone, Copy, Debug)]
 pub enum Message {
@@ -120,11 +122,11 @@ impl Anthilus {
     }
 
     fn up(&mut self) {
-        if *self.get_hovered_pane().path != PathBuf::from(".") {
+        if *self.get_hovered_pane().path != *CURRENTDIR {
             self.get_hovered_pane().stop_searching();
             self.get_hovered_pane().path.pop();
         } else {
-            if let Ok(path) = std::path::absolute(*self.get_hovered_pane().path.clone()) {
+            if let Ok(path) = std::path::absolute(".") {
                 *self.get_hovered_pane().path = path;
             }
         }
@@ -296,10 +298,6 @@ impl TypingBuffer {
         }
 
         None
-    }
-
-    pub fn buffer(&self) -> String {
-        self.buffer.clone()
     }
 
     pub fn location(&self) -> TypingLocation {
