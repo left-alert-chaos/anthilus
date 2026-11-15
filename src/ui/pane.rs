@@ -296,7 +296,7 @@ impl Pane {
                 format!(
                     "{}\n\nFind: \x1b[1;31m{}\x1b[0m",
                     self.display_path(),
-                    buffer.buffer()
+                    buffer.display_buffer()
                 )
             }
         } else {
