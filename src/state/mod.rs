@@ -136,10 +136,6 @@ impl Anthilus {
     fn new_pane(&mut self) {
         let path = self.get_hovered_pane().hovered_item_path();
 
-        if !path.is_dir() {
-            return;
-        }
-
         self.panes.push(Pane::new(path));
 
         self.get_hovered_pane().hovered = false;

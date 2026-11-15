@@ -18,11 +18,15 @@ pub struct Item {
     typing_buffer: Option<TypingBuffer>,
     is_dir: bool,
     pub is_preview_line: bool,
+    icon: char,
 }
 
 impl Item {
     pub fn new(name: impl Into<String>, is_dir: bool, is_preview_line: bool) -> Self {
         let name = name.into();
+
+        let icon = if is_dir { '' } else { get_icon(&name) };
+
         Self {
             name,
             expanded_index: None,
@@ -30,6 +34,7 @@ impl Item {
             typing_buffer: None,
             is_dir,
             is_preview_line,
+            icon,
         }
     }
 
@@ -46,11 +51,7 @@ impl Item {
         }
 
         if !self.is_preview_line {
-            if self.is_dir {
-                text.insert_str(0, " ");
-            } else {
-                text.insert_str(0, " ");
-            }
+            text.insert_str(0, format!("{} ", self.icon).as_str());
         }
 
         if self.hovered && pane_is_hovered {
@@ -179,5 +180,31 @@ impl Item {
 
     fn start_rename(&mut self) {
         self.typing_buffer = Some(TypingBuffer::new(self.name.clone(), TypingLocation::Rename));
+    }
+}
+
+fn get_icon(name: &String) -> char {
+    let Some(extension) = name.split(".").last() else {
+        return '';
+    };
+    
+    match extension {
+        "py" => '',
+        "rs" => '',
+        "go" => '󰟓',
+        "js" => '',
+        "html" => '',
+        "css" => '',
+        "c" | "h" => '',
+        "cpp" => '',
+        "gitignore" => '',
+        "cs" => '',
+        "java" | "jar" => '',
+        "kt" | "kts" | "ktm" => '',
+        "toml" => '',
+        "lock" => '',
+        "md" => '',
+        "yaml" | "yml" => '',
+        _ => '',
     }
 }

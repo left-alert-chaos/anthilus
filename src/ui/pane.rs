@@ -102,14 +102,33 @@ impl Pane {
 
         self.pane_type = if self.path.is_dir() { PaneType::Directory } else { PaneType::Preview };
 
-        // read file and display lines as items
         match self.pane_type {
+            // read file and display lines as items
             PaneType::Preview => {
                 if let Ok(slice) = read(&*self.path)
                     && let Ok(text) = String::from_utf8(slice)
                 {
-                    for (index, line) in text.split('\n').enumerate() {
-                        let line = format!("{index}] {line}");
+                    let mut lines = Vec::new();
+                    let mut gutter = 0;
+                    for (mut index, line) in text.split('\n').enumerate() {
+                        index += 1;
+
+                        let number = format!("{index}] ");
+                        let number_len = number.len();
+                        if number_len > gutter {
+                            gutter = number_len;
+                        }
+
+                        lines.push(line);
+                    }
+
+                    for (mut index, line) in lines.iter().enumerate() {
+                        index += 1;
+
+                        let mut number = format!("{index}] ");
+                        while number.len() < gutter { number.insert(0, ' '); }
+                        let line = format!("{number}{line}");
+
                         self.items.push(Item::new(&line, false, true));
                         if line == hovered_name {
                             self.hovered_item_index = self.items.len() - 1;
