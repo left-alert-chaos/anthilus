@@ -205,7 +205,7 @@ fn get_icon(name: &String) -> char {
         "kt" | "kts" | "ktm" => '',
         "toml" => '',
         "lock" => '',
-        "md" => '',
+        "md" => '',
         "yaml" | "yml" => '',
         _ => '',
     }
