@@ -143,20 +143,34 @@ impl Anthilus {
     }
 
     fn select(&mut self) {
-        let path = self.get_hovered_pane().hovered_item_path();
-        if let Some(item) = self.get_hovered_pane().hovered_item()
+        let pane = self.get_hovered_pane();
+        let path = pane.hovered_item_path();
+        if let Some(item) = pane.hovered_item()
             && item.is_preview_line
         {
             return;
-        } else if self.get_hovered_pane().hovered_item().is_none() {
+        } else if pane.hovered_item().is_none() {
             return;
         }
 
-        if let Some(item) = self.get_hovered_pane().hovered_item()
-            && let Some(result) = item.select(path)
+        let item_index = pane.hovered_item_index;
+        let last_row = pane.last_row();
+
+        if let Some(item) = pane.hovered_item()
         {
-            self.use_update_result(result);
+            let res = item.select(path);
+            let expanded_index = item.expanded_index;
+
+            if let Some(index) = expanded_index && index + item_index + 2 > last_row {
+                log("increasing first row");
+                pane.first_row += DROPDOWN_ITEM_NAMES.len() - index - 1;
+            }
+
+            if let Some(result) = res {
+                self.use_update_result(result);
+            }
         }
+
     }
 
     fn update_input_typing(&mut self, input: Input) {

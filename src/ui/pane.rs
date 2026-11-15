@@ -22,7 +22,7 @@ pub enum PaneType {
 pub struct Pane {
     pub path: Box<PathBuf>,
     pub items: Vec<Item>,
-    hovered_item_index: usize,
+    pub hovered_item_index: usize,
     pub hovered: bool,
     pub first_row: usize,
     pub typing_buffer: Option<TypingBuffer>,
@@ -57,10 +57,7 @@ impl Pane {
     pub fn render(&self, context: &mut RenderContext) -> Render {
         let mut buffer = format!("\x1b[1;{}H{}", context.x, self.title(&*context).as_str());
 
-        let mut last_row = self.first_row + height() - self.title_height() - 2;
-        if last_row > self.items.len() {
-            last_row = self.items.len();
-        }
+        let last_row = self.last_row();
 
         context.y += self.title_height() as u32;
 
@@ -81,6 +78,15 @@ impl Pane {
         );
 
         Render::new(buffer)
+    }
+
+    pub fn last_row(&self) -> usize {
+        let mut last_row = self.first_row + height() - self.title_height() - 2;
+        if last_row > self.items.len() {
+            last_row = self.items.len();
+        }
+
+        last_row
     }
 
     /// Remove existing items and replace with up-to-date ones.
