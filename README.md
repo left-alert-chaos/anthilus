@@ -1,8 +1,7 @@
-<video>
-    <source src="demo.mp4" type="video/mp4">
-</video>
-
 # Anthilus
+
+https://github.com/user-attachments/assets/19121e50-6e99-4b5c-8b9a-5a001078fd03
+
 Anthilus is a lightweight file manager for your Linux terminal!
 
 It can display directories, preview files, show file types, rename/move files, and delete things!
