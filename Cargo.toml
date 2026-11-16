@@ -10,6 +10,7 @@ repository = "https://github.com/left-alert-chaos/anthilus"
 exclude = [
 	"directory_generator.py",
 	"files_to_read",
+	"CHANGELOG.md",
 ]
 
 [build-dependencies]

@@ -195,6 +195,7 @@ fn get_icon(name: &String) -> char {
         "rs" => '',
         "go" => '󰟓',
         "js" => '',
+        "json" => '',
         "html" => '',
         "css" => '',
         "c" | "h" => '',
