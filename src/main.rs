@@ -39,5 +39,7 @@ Anthilus is a lightweight file manager for your Linux terminal!
 Usage: anthilus [dir] [--log] [--help]
 Flags:
     --log: Print logs and exit. Logs are located at ~/.cache/anthilus/anthilus.log
-    --help: Print this help text and exit.")
+    --help: Print this help text and exit.
+
+While using Anthilus, you can hit ? to see more help text.")
 }

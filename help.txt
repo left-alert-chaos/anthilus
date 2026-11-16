@@ -1,0 +1,47 @@
+Welcome to Anthilus!
+
+Anthilus is a lightweight, powerful file manager
+that runs entirely in your Linux terminal.
+You can move around with the arrow keys or hjkl.
+
+Anthilus' UI is split into 2 main components:
+items and panes.
+
+An item is one line of text, which sometimes has a context menu.
+These are things like files and the lines of this help text!
+
+Panes are the views that hold items in a stack.
+They have a path at the top and numbers at the bottom to indicate their items.
+
+Left and right movement switches between panes,
+and up and down movement switches between items.
+The item you're currently hovering is bold and red.
+
+Items that represent files and directories can be selected with the Return key.
+That will open a context menu.
+To try this, switch back to the pane you opened this text from and select an item.
+
+In this menu, you can:
+open the item in the current pane,
+open it in a new pane,
+rename it,
+or delete it.
+
+Renaming can also be used to move files.
+
+Anthilus also has certain keys that perform actions automatically.
+Here they are, in no particular order:
+
+f - Find a file (search titles).
+g - Go to (enter a new path for the pane).
+p - Open this item in a new pane.
+? - Open this help text.
+q - Close the current pane and exit if there are none left.
+r - Repopulate the current pane.
+n - Create a new file.
+Backspace - Go up one directory level.
+
+When you are typing something, you can always hit Escape to cancel.
+While typing, action keys won't work.
+
+That's Anthilus in a nutshell!

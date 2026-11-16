@@ -6,10 +6,12 @@ use input::Input;
 use crate::logging::log;
 use crate::render::RenderContext;
 use crate::ui::*;
+use crate::username::username;
 
-use std::{env::current_dir, path::PathBuf, sync::LazyLock};
+use std::{env::current_dir, path::PathBuf, sync::LazyLock, fs::write};
 
 static CURRENTDIR: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from("."));
+static HELPLOCATION: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from(format!("/home/{}/.cache/anthilus/help.txt", username())));
 
 #[derive(Clone, Copy, Debug)]
 pub enum Message {
@@ -113,11 +115,12 @@ impl Anthilus {
             Input::Backspace => self.up(),
             Input::Character('g') => self.goto(),
             Input::Character('f') => self.search(),
+            Input::Character('?') => self.open_help(),
             Input::Escape => {
                 self.get_hovered_pane().stop_searching();
                 self.get_hovered_pane().populate();
             }
-            _ => log(format!("recieved unused input {input:?}")),
+            _ => log(format!("Anthilus::update_input_hovering(): Recieved unused input {input:?}")),
         }
     }
 
@@ -251,6 +254,20 @@ impl Anthilus {
 
         pane.typing_buffer = Some(TypingBuffer::new(String::new(), TypingLocation::Search));
         self.cursor_state = CursorState::Typing;
+    }
+
+    fn open_help(&mut self) {
+        // ensure help file exists
+        if !HELPLOCATION.is_file() && let Err(e) = write(&*HELPLOCATION, include_str!("../../help.txt")) {
+            log(format!("Anthilus::open_help(): Couldn't write help file to {HELPLOCATION:?} because {e}"));
+            return;
+        }
+
+        self.get_hovered_pane().hovered = false;
+        let mut pane = Pane::new(&*HELPLOCATION);
+        pane.hovered = true;
+        self.hovered_pane += 1;
+        self.panes.push(pane);
     }
 }
 

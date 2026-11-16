@@ -12,6 +12,8 @@ pub fn log(s: impl ToString) {
 }
 
 pub fn print_logs() {
+    log("reading logs");
+
     let username = crate::username::username();
     let path = format!("/home/{username}/.cache/anthilus/anthilus.log");
 

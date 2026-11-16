@@ -30,6 +30,8 @@ export PATH="$PATH:~/.cargo/bin/"
 # Usage
 Anthilus can be run without any flags or arguments, and will start in the current directory. Optionally, you can supply one argument that will be used as the starting directory. The `--help` flag can be used to print help text. The `--log` flag will print Anthilus' logs (located at `~/.cache/anthilus/anthilus.log`).
 
+While using Anthilus, you can use the ? key to see a guide.
+
 # Platform
 Currently, Anthilus is only tested on Linux. It is probably not Windows-compatible, but _might_ work with macOS.
 
