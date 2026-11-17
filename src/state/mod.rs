@@ -111,6 +111,7 @@ impl Anthilus {
             Input::Character('r') => self.get_hovered_pane().populate(),
             Input::Return => self.select(),
             Input::Character('n') => self.new_file(),
+            Input::Character('d') => self.new_directory(),
             Input::Character('p') => self.new_pane(),
             Input::Backspace => self.up(),
             Input::Character('g') => self.goto(),
@@ -156,14 +157,13 @@ impl Anthilus {
             return;
         }
 
-        let item_index = pane.hovered_item_index;
         let last_row = pane.last_row();
 
         if let Some(item) = pane.hovered_item()
         {
             let res = item.select(path);
 
-            if item.expanded_index.is_some() && DROPDOWN_ITEM_NAMES.len() + item_index + 2 > last_row {
+            if item.expanded_index.is_some() && DROPDOWN_ITEM_NAMES.len() + pane.first_row + 2 > last_row {
                 log("increasing first row");
                 pane.first_row += DROPDOWN_ITEM_NAMES.len();
             }
@@ -225,15 +225,30 @@ impl Anthilus {
             file_name = format!("file{file_number}");
         }
 
-        let mut path = self.get_hovered_pane().path.clone();
-        path.push(&file_name);
-        if let Err(e) = std::fs::write(*path, "") {
-            log(format!(
-                "Anthilus::new_file(): Couldn't write to {file_name} because {e}"
-            ));
+        self.get_hovered_pane().typing_buffer = Some(TypingBuffer::new(file_name, TypingLocation::NewFile));
+        self.cursor_state = CursorState::Typing;
+        self.get_hovered_pane().items.iter_mut().for_each(|i| i.hovered = false);
+    }
+
+    fn new_directory(&mut self) {
+        let mut dir_number = 0;
+        let mut dir_name = String::from("dir0");
+
+        while !self
+            .get_hovered_pane()
+            .items
+            .iter()
+            .filter(|i| i.name() == dir_name)
+            .collect::<Vec<_>>()
+            .is_empty()
+        {
+            dir_number += 1;
+            dir_name = format!("dir{dir_number}");
         }
 
-        self.get_hovered_pane().populate();
+        self.get_hovered_pane().typing_buffer = Some(TypingBuffer::new(dir_name, TypingLocation::NewDirectory));
+        self.cursor_state = CursorState::Typing;
+        self.get_hovered_pane().items.iter_mut().for_each(|i| i.hovered = false);
     }
 
     fn goto(&mut self) {
@@ -293,6 +308,8 @@ pub enum TypingLocation {
     Rename,
     Goto,
     Search,
+    NewFile,
+    NewDirectory,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]

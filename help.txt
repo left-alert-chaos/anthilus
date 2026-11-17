@@ -39,6 +39,7 @@ p - Open this item in a new pane.
 q - Close the current pane and exit if there are none left.
 r - Repopulate the current pane.
 n - Create a new file.
+d - Create a new directory.
 Backspace - Go up one directory level.
 
 When you are typing something, you can always hit Escape to cancel.

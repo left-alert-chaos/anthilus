@@ -4,10 +4,7 @@ use crate::{
 };
 
 use std::{
-    fs::{metadata, read, read_dir},
-    path::PathBuf,
-    sync::mpsc::{Receiver, Sender, channel},
-    thread::spawn,
+    fs::{create_dir_all, metadata, read, read_dir, write}, path::PathBuf, sync::mpsc::{Receiver, Sender, channel}, thread::spawn,
 };
 
 /// What purpose the pane is serving
@@ -58,11 +55,28 @@ impl Pane {
         let mut buffer = format!("\x1b[1;{}H{}", context.x, self.title(&*context).as_str());
 
         let last_row = self.last_row();
+        let mut first_row = self.first_row;
+
+        if let Some(item) = self.hovered_item() && item.expanded_index.is_some() && self.items.len() + DROPDOWN_ITEM_NAMES.len() > self.maximum_row() {
+            first_row += DROPDOWN_ITEM_NAMES.len();
+        }
 
         context.y += self.title_height() as u32;
 
-        for item in &self.items[self.first_row..last_row] {
+        for item in &self.items[first_row..last_row] {
             buffer.push_str(item.render(self.hovered, context).text.as_str());
+            context.y += 1;
+        }
+
+        // name of file being created
+        if let Some(typing_buffer) = &self.typing_buffer && self.is_creating_file_or_directory() {
+            let mut name = typing_buffer.display_buffer();
+            if typing_buffer.location() == TypingLocation::NewDirectory {
+                name.insert_str(0, " ");
+            }
+            name.insert_str(0, format!("\x1b[{};{}H\x1b[1;31m", context.y, context.x).as_str());
+
+            buffer.push_str(name.as_str());
             context.y += 1;
         }
 
@@ -81,15 +95,21 @@ impl Pane {
     }
 
     pub fn last_row(&mut self) -> usize {
-        let mut last_row = self.first_row + height() - self.title_height() - 2;
+        let mut last_row = self.maximum_row();
         if last_row > self.items.len() {
             last_row = self.items.len();
         }
+        /*
         if let Some(item) = self.hovered_item() && item.expanded_index.is_some() {
             last_row -= DROPDOWN_ITEM_NAMES.len();
         }
+        */
 
         last_row
+    }
+
+    fn maximum_row(&self) -> usize {
+        self.first_row + height() - self.title_height() - 2
     }
 
     /// Remove existing items and replace with up-to-date ones.
@@ -324,12 +344,30 @@ impl Pane {
                 self.typing_buffer = None;
                 Some(UpdateItemResult::RepopulateAndHover)
             }
+            TypingLocation::NewFile => {
+                let mut path = self.path.clone();
+                path.push(text);
+                if let Err(e) = write(&*path, "") {
+                    log(format!("pane::Pane::finish_buffer(): Couldn't create new file because {e}"));
+                }
+                self.typing_buffer = None;
+                Some(UpdateItemResult::RepopulateAndHover)
+            }
+            TypingLocation::NewDirectory => {
+                let mut path = self.path.clone();
+                path.push(text);
+                if let Err(e) = create_dir_all(&*path) {
+                    log(format!("pane::Pane::finish_buffer(): Couldn't create new directory because {e}"));
+                }
+                self.typing_buffer = None;
+                Some(UpdateItemResult::RepopulateAndHover)
+            }
             _ => unreachable!(),
         }
     }
 
     fn title(&self, context: &RenderContext) -> String {
-        let text = if let Some(buffer) = &self.typing_buffer {
+        let text = if let Some(buffer) = &self.typing_buffer && !matches!(buffer.location(), TypingLocation::NewDirectory | TypingLocation::NewFile) {
             if buffer.location() == TypingLocation::Goto {
                 format!("Go to: \x1b[1;31m{}", buffer.display_buffer())
             } else {
@@ -372,6 +410,14 @@ impl Pane {
             .replace("/", "/\n");
         path.remove(1);
         path.trim().to_string()
+    }
+    
+    fn is_creating_file_or_directory(&self) -> bool {
+        if let Some(buffer) = &self.typing_buffer && matches!(buffer.location(), TypingLocation::NewDirectory | TypingLocation::NewFile) {
+            true
+        } else {
+            false
+        }
     }
 }
 
